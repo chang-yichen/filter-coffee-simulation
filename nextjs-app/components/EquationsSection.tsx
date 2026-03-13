@@ -16,7 +16,7 @@ function EqCard({ title, tagline, eqLabel, equation, children, analogy, infoTitl
         <button
           onClick={() => setOpen(true)}
           title="Learn more from the physics book"
-          className="flex-shrink-0 w-6 h-6 rounded-full border border-coffee-light text-coffee-light hover:border-coffee-medium hover:text-coffee-medium text-xs font-bold leading-none flex items-center justify-center transition-colors mt-1"
+          className="relative flex-shrink-0 w-6 h-6 rounded-full border border-coffee-light text-coffee-light hover:border-coffee-medium hover:text-coffee-medium text-xs font-bold leading-none flex items-center justify-center transition-colors mt-1 after:absolute after:content-[''] after:-inset-2.5"
         >
           i
         </button>
