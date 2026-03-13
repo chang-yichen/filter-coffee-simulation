@@ -154,10 +154,22 @@ export function channelingFraction(
   avoidPaper: boolean,
   swirl: boolean
 ): number {
-  const base = pourPattern === 'circular' ? 0 : 0.07;
-  const paperPenalty = avoidPaper ? 0 : 0.07;
-  const swirlBonus = swirl ? 0.03 : 0;
-  return Math.max(0.03, base + paperPenalty + 0.03 - swirlBonus);
+  // Lookup table from Gagné's technique analysis.
+  // Previous formula used Math.max(0.03, …) which swallowed the swirl bonus
+  // in the best-case scenario (circular + avoidPaper): both swirl=true and
+  // swirl=false produced 0.03, making the checkbox have no visible effect.
+  const key = `${pourPattern}-${avoidPaper}-${swirl}` as const;
+  const table: Record<string, number> = {
+    'circular-true-true':   0.03,
+    'circular-true-false':  0.06,
+    'circular-false-true':  0.10,
+    'circular-false-false': 0.14,
+    'center-true-true':     0.10,
+    'center-true-false':    0.14,
+    'center-false-true':    0.17,
+    'center-false-false':   0.21,
+  };
+  return table[key] ?? 0.03;
 }
 
 /** Liquid retained ratio — water trapped in spent coffee bed */

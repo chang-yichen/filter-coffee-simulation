@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useBrew } from './BrewContext';
 import InfoModal from './InfoModal';
+import { channelingFraction } from '@/lib/physics';
 
 function TechniqueCheckbox({
   label,
@@ -79,11 +80,7 @@ export default function TechniqueSection() {
 
         <div className="mt-3 text-[0.65rem] text-coffee-light text-right">
           Channeling: <span className="font-semibold text-coffee-medium">
-            {Math.round(
-              (params.pourPattern === 'circular' ? 0 : 7) +
-              (params.avoidPaper ? 0 : 7) +
-              (params.swirl ? -3 : 0) + 3
-            )}% bypass
+            {Math.round(channelingFraction(params.pourPattern, params.avoidPaper, params.swirl) * 100)}% bypass
           </span> · Bloom efficiency: <span className="font-semibold text-coffee-medium">
             {params.bloomWetting === 'even' ? '100%' : '50%'}
           </span>

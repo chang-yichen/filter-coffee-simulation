@@ -130,7 +130,11 @@ export function simulateFull(p: BrewParams): SimResult {
     // Pour logic
     if (curPour < s.pourStarts.length && t >= s.pourStarts[curPour]) {
       pouring = true;
-      pourEnd = s.pourStarts[curPour] + s.pourDurs[curPour];
+      // Last pour: extend end time to cover any water still undelivered from overlapping pours
+      const isLast = curPour === s.pourStarts.length - 1;
+      const scheduledDur = s.pourDurs[curPour];
+      const neededDur = isLast ? Math.max(scheduledDur, (p.waterTotal - poured) / p.pourRate) : scheduledDur;
+      pourEnd = s.pourStarts[curPour] + neededDur;
       curPour++;
     }
     if (pouring && t < pourEnd && poured < p.waterTotal) {
@@ -245,7 +249,10 @@ export function animStep(
   // Pour logic
   if (a.curPour < s.pourStarts.length && a.t >= s.pourStarts[a.curPour]) {
     a.pouring = true;
-    a.pourEnd = s.pourStarts[a.curPour] + s.pourDurs[a.curPour];
+    const isLast = a.curPour === s.pourStarts.length - 1;
+    const scheduledDur = s.pourDurs[a.curPour];
+    const neededDur = isLast ? Math.max(scheduledDur, (p.waterTotal - a.poured) / p.pourRate) : scheduledDur;
+    a.pourEnd = s.pourStarts[a.curPour] + neededDur;
     a.curPour++;
   }
   if (a.pouring && a.t < a.pourEnd && a.poured < p.waterTotal) {
