@@ -1,6 +1,7 @@
 import { BrewProvider } from '@/components/BrewContext';
 import BrewAnimation from '@/components/BrewAnimation';
 import TechniqueSection from '@/components/TechniqueSection';
+import TroubleshootingSection from '@/components/TroubleshootingSection';
 import ControlsPanel from '@/components/ControlsPanel';
 import ResultsSummary from '@/components/ResultsSummary';
 import Charts from '@/components/Charts';
@@ -23,13 +24,14 @@ export default function Home() {
 
           <TechniqueSection />
 
-          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 mb-6">
             <ControlsPanel />
             <div className="flex flex-col gap-5">
               <ResultsSummary />
               <Charts />
             </div>
           </div>
+          <TroubleshootingSection />
         </BrewProvider>
 
         <EquationsSection />

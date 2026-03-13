@@ -43,6 +43,36 @@ function Slider({ label, value, unit, min, max, step, paramKey, displayValue }: 
   );
 }
 
+function PillSelector<T extends string>({
+  label, value, options, onChange,
+}: {
+  label: string;
+  value: T;
+  options: { value: T; label: string }[];
+  onChange: (v: T) => void;
+}) {
+  return (
+    <div className="mb-3">
+      <div className="text-sm font-medium mb-1.5 text-coffee-dark">{label}</div>
+      <div className="flex gap-1.5 flex-wrap">
+        {options.map(opt => (
+          <button
+            key={opt.value}
+            onClick={() => onChange(opt.value)}
+            className={`px-3 py-1 text-xs rounded-full border font-medium transition-colors ${
+              value === opt.value
+                ? 'bg-coffee-medium text-white border-coffee-medium'
+                : 'bg-bg text-coffee-medium border-border hover:border-coffee-medium'
+            }`}
+          >
+            {opt.label}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SectionTitle({ children, first }: { children: React.ReactNode; first?: boolean }) {
   return (
     <div className={`text-[0.7rem] font-semibold uppercase tracking-wider text-coffee-light
@@ -59,7 +89,7 @@ function fmtTime(s: number) {
 }
 
 export default function ControlsPanel() {
-  const { params, setParams } = useBrew();
+  const { params, setParams, updateParam } = useBrew();
 
   const bedTopD = coneBedTopDiameterMM(params.dose, params.diameter);
   const coneHBed = bedTopD / (2 * Math.tan(V60_HALF_ANGLE));
@@ -84,9 +114,42 @@ export default function ControlsPanel() {
       <Slider label="Coffee Dose" value={params.dose} unit="g" min={10} max={40} step={0.5} paramKey="dose" />
       <Slider label="Grind Size" value={params.grind} unit="µm" min={200} max={1200} step={10} paramKey="grind"
         displayValue={`${grindLabel(params.grind)} (${params.grind} µm)`} />
+      <PillSelector
+        label="Roast Level"
+        value={params.roastLevel ?? 'medium'}
+        options={[
+          { value: 'light', label: 'Light (26% max EY)' },
+          { value: 'medium', label: 'Medium (28%)' },
+          { value: 'dark', label: 'Dark (30%)' },
+        ]}
+        onChange={v => updateParam('roastLevel', v)}
+      />
+      <PillSelector
+        label="Bean Freshness"
+        value={params.beanFreshness ?? 'rested'}
+        options={[
+          { value: 'fresh', label: 'Fresh (1–7 days)' },
+          { value: 'rested', label: 'Rested (1–4 wks)' },
+          { value: 'stale', label: 'Stale (>4 wks)' },
+        ]}
+        onChange={v => updateParam('beanFreshness', v)}
+      />
 
       <SectionTitle>Water</SectionTitle>
       <Slider label="Total Water" value={params.waterTotal} unit="g" min={150} max={600} step={5} paramKey="waterTotal" />
+      {(() => {
+        const ratio = params.waterTotal / params.dose;
+        const inRange = ratio >= 15 && ratio <= 18;
+        return (
+          <div className="mb-3 flex items-center justify-between text-xs bg-bg rounded-md px-2.5 py-1.5 border border-border">
+            <span className="text-coffee-light font-medium">Brew ratio</span>
+            <span className={`font-semibold tabular-nums ${inRange ? 'text-green-700' : 'text-amber-600'}`}>
+              1 : {ratio.toFixed(1)}
+              {inRange ? ' ✓' : ratio < 15 ? ' (strong)' : ' (light)'}
+            </span>
+          </div>
+        );
+      })()}
       <Slider label="Temperature" value={params.temp} unit="°C" min={70} max={100} step={0.5} paramKey="temp" />
 
       <SectionTitle>Pouring</SectionTitle>

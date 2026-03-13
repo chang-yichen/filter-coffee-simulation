@@ -78,7 +78,7 @@ export function buildBrewConstants(p: BrewParams): BrewConstants {
   return {
     k_SI, L_SI, A_SI, nu_SI, geoFactor, bedDepth: bed,
     pourStarts, pourDurs, waterPerPours,
-    maxSoluble: p.dose * 0.30,
+    maxSoluble: p.dose * { light: 0.26, medium: 0.28, dark: 0.30 }[p.roastLevel ?? 'medium'],
     bedCapacity: LRR * p.dose,
     channelingFrac: channelingFraction(
       p.pourPattern ?? 'circular',
@@ -103,7 +103,12 @@ function extractionIncrement(
   const contact = Math.min(1, (wCol * 1000 + s.bedDepth * 0.5) / s.bedDepth);
   const agitBoost = 1.0 + 0.3 * agitation;
   // Bloom wetting: uneven saturation limits CO2 degassing → lower effective surface area
-  const bloomFactor = curPour === 1 && (p.bloomWetting ?? 'even') === 'center' ? 0.50 : 1.0;
+  const bloomWettingFactor = curPour === 1 && (p.bloomWetting ?? 'even') === 'center' ? 0.50 : 1.0;
+  // Bean freshness: fresh beans have high CO2 that actively repels water during the bloom
+  const freshnessFactor = curPour === 1
+    ? ({ fresh: 0.75, rested: 1.0, stale: 0.90 }[p.beanFreshness ?? 'rested'])
+    : 1.0;
+  const bloomFactor = bloomWettingFactor * freshnessFactor;
   // Channeling: fraction of water bypasses bed → less water does extraction work
   const channelingFactor = 1 - s.channelingFrac;
   const rate = 0.0026 * p.dose * sa * df * drive * contact * agitBoost * bloomFactor * channelingFactor;

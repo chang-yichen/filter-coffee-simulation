@@ -18,6 +18,9 @@ export interface BrewParams {
   avoidPaper: boolean;
   bloomWetting: 'even' | 'center';
   swirl: boolean;
+  // Bean characteristics
+  roastLevel: 'light' | 'medium' | 'dark';
+  beanFreshness: 'fresh' | 'rested' | 'stale';
 }
 
 export interface BrewConstants {

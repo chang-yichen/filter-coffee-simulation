@@ -290,6 +290,194 @@ export default function EquationsSection() {
       >
         <p>As temperature rises, viscosity drops significantly. <strong>Flow speeds up ~20% from 80&deg;C to 95&deg;C.</strong> Brew cooler? Grind coarser to compensate.</p>
       </EqCard>
+
+      <EqCard title="7. Grind Distribution — Why Fines Matter More"
+        tagline="It's not the average particle size that limits flow — it's the smallest ones"
+        eqLabel="Kozeny-Carman (simplified)"
+        equation={<>k &prop; D<sub>10</sub><sup>2</sup> &middot; &phi;<sup>3</sup> / (1&minus;&phi;)<sup>2</sup></>}
+        analogy="A chain-link fence with one tiny hole: no matter how wide the other holes are, flow through the whole fence is limited by the smallest opening. Coffee fines are that tiny hole."
+        infoTitle="Grind Distribution — The Full Picture"
+        infoContent={
+          <>
+            <p>
+              The Kozeny-Carman equation relates permeability k to the particle size distribution.
+              The critical term is <strong>D₁₀</strong> — the 10th percentile diameter, meaning the
+              coarsest of the fine particles. Gagné shows that doubling D₁₀ (halving fines)
+              quadruples permeability. The average grind size matters far less than you might expect.
+            </p>
+            <p>
+              Burr grinders produce a <strong>bimodal distribution</strong>: a large peak of coarse
+              particles (the intentional grind) and a smaller peak of very fine particles (fines
+              created by fracture and inter-particle grinding). These fines settle into the smallest
+              pores of the bed and dominate hydraulic resistance despite making up a small fraction
+              of mass.
+            </p>
+            <p>
+              This is why <strong>grinder quality matters more than grinder setting</strong>. Two
+              grinders set to the same nominal grind size can produce very different brew times and
+              extraction yields if they produce different fines fractions. Higher-quality burr
+              grinders produce narrower distributions (fewer fines at a given median size).
+            </p>
+            <ul>
+              <li>Blade grinders: very wide distribution, many fines → slow, unpredictable flow.</li>
+              <li>Cheap burr grinders: moderate fines production — acceptable for drip.</li>
+              <li>High-quality flat or conical burrs: tight distribution, predictable extraction.</li>
+              <li>Electrostatic clumping of fines can cause uneven distribution in the bed —
+                Ross Droplet Technique (one drop of water before grinding) can reduce this.</li>
+            </ul>
+          </>
+        }
+      >
+        <p>
+          Permeability k scales with <strong>D₁₀²</strong> — the square of the fines diameter, not the mean.
+          A grinder that produces 10% fewer fines at a given setting will brew noticeably faster and extract more evenly.
+        </p>
+        <ul>
+          <li><strong>φ (porosity)</strong> — Fraction of bed that is empty space. Fines reduce porosity, compounding their effect on k.</li>
+          <li><strong>Grind uniformity</strong> — A tight distribution means D₁₀ ≈ D₅₀ ≈ D₉₀; all particles contribute equally to flow resistance.</li>
+          <li><strong>Fines migration</strong> — As water flows, fines move toward the filter and progressively clog it, slowing the brew over time. This explains the decreasing drip rate in the chart above.</li>
+        </ul>
+      </EqCard>
+
+      <EqCard title="8. Brew Ratio — Strength vs. Extraction"
+        tagline="EY and TDS are independent — you can change one without the other"
+        eqLabel="TDS from ratio"
+        equation={<>TDS = EY &middot; D / (W &minus; L<sub>RR</sub> &middot; D)</>}
+        analogy="Making orange juice: squeezing harder (finer grind = higher EY) gets more juice from each orange. But diluting the juice with water (higher ratio) makes it weaker even if the squeeze was perfect."
+        infoTitle="Brew Ratio — Dialling In Strength Independently"
+        infoContent={
+          <>
+            <p>
+              The brew ratio R = water / dose determines the strength (TDS) of your cup
+              independently of extraction yield. This is a crucial insight: you can have
+              a <em>perfectly extracted</em> cup at 20% EY that tastes watery (ratio too high)
+              or overwhelming (ratio too low).
+            </p>
+            <p>
+              <strong>SCA golden ratio:</strong> 55–65 g coffee per litre of water (roughly 1:15–1:18
+              by weight). Most specialty coffee is brewed at 1:15–1:17. Light roasts often benefit
+              from 1:15–1:16 to compensate for their lower solubility ceiling.
+            </p>
+            <p>
+              The formula TDS = EY × D / (W − L_RR × D) shows that:
+            </p>
+            <ul>
+              <li>Increasing dose D (same water) → higher TDS directly.</li>
+              <li>Increasing water W (same dose) → lower TDS directly.</li>
+              <li>L_RR × D is the water retained in spent grounds (~2g per gram of coffee)
+                — this water never reaches the cup, slightly concentrating the brew.</li>
+              <li>EY and ratio interact: the same ratio at different EYs produces different TDS.</li>
+            </ul>
+            <p>
+              <strong>Practical shortcut:</strong> if your cup is correctly extracted (18–22% EY)
+              but too weak or too strong, adjust only the dose or water. Don't change grind or
+              temperature — those affect EY, not just strength.
+            </p>
+          </>
+        }
+      >
+        <ul>
+          <li><strong>D</strong> — Dose (g). More coffee = stronger cup at same water volume.</li>
+          <li><strong>W</strong> — Total water (g). More water = weaker cup at same dose.</li>
+          <li><strong>L_RR</strong> — Liquid retained ratio (~2g/g). Water absorbed by grounds never reaches the cup.</li>
+        </ul>
+        <p className="mt-1">SCA target: <strong>1:15–1:18</strong> ratio for drip coffee. Aim for TDS <strong>1.2–1.45%</strong> in the cup.</p>
+      </EqCard>
+
+      <EqCard title="9. Water Chemistry — Minerals and Extraction"
+        tagline="What's in the water affects what ends up in the cup"
+        eqLabel="Mineral interactions"
+        equation={<>Mg<sup>2+</sup> + Ca<sup>2+</sup> &rarr; enhanced solubility of aromatics</>}
+        analogy="Salt on food: a small amount enhances flavor dramatically. The right mineral content in water acts the same way — trace amounts of calcium and magnesium make coffee taste more vibrant and sweet than pure distilled water would."
+        infoTitle="Water Chemistry — Gagné's Full Treatment"
+        infoContent={
+          <>
+            <p>
+              Gagné dedicates a full chapter to water chemistry. Pure distilled water actually
+              extracts <em>less</em> than properly mineralised water — the dissolved minerals
+              actively participate in the extraction process.
+            </p>
+            <p>
+              <strong>Magnesium (Mg²⁺)</strong> is the most effective mineral for coffee extraction.
+              It forms coordination complexes with aromatic coffee compounds, essentially helping
+              to pull them out of the grounds and keep them in solution. Small amounts (20–30 mg/L)
+              noticeably improve extraction of fruity and floral aromatics.
+            </p>
+            <p>
+              <strong>Calcium (Ca²⁺)</strong> has a similar but weaker effect. It also contributes
+              to perceived body and mouthfeel.
+            </p>
+            <p>
+              <strong>Bicarbonate (HCO₃⁻)</strong> is a buffer that neutralises acids.
+              High bicarbonate (alkalinity {'>'} 100 mg/L) can flatten perceived acidity, making
+              even a well-extracted bright coffee taste dull. Low bicarbonate allows the natural
+              acidity to come through clearly.
+            </p>
+            <ul>
+              <li><strong>Too soft ({'<'}50 ppm total hardness)</strong>: under-extraction, flat taste.</li>
+              <li><strong>80–150 ppm</strong>: SCA/WBC optimal range for specialty coffee.</li>
+              <li><strong>{'>'}300 ppm</strong>: over-buffered, potential scale build-up in equipment.</li>
+              <li><strong>Third Wave Water</strong>: commercial mineral packets designed for this range.</li>
+            </ul>
+          </>
+        }
+      >
+        <ul>
+          <li><strong>Mg²⁺</strong> — Enhances extraction of aromatic compounds. 20–30 mg/L is ideal.</li>
+          <li><strong>HCO₃⁻ (alkalinity)</strong> — Buffers acidity. High alkalinity = flat, dull cup.</li>
+          <li><strong>Total hardness</strong> — Too soft = under-extraction. SCA target: 80–150 ppm.</li>
+        </ul>
+        <p className="mt-1">Tap water varies wildly. If your coffee tastes flat or dull with correct EY and TDS, water chemistry is the likely culprit.</p>
+      </EqCard>
+
+      <EqCard title="10. Multiple Pours — Refreshing the Concentration Gradient"
+        tagline="Why three pours extract more than one continuous pour of the same water"
+        eqLabel="Noyes-Whitney (concentration reset)"
+        equation={<>&Delta;C<sub>sol</sub> &darr; &nbsp;&rarr;&nbsp; (C<sub>sat</sub> &minus; C<sub>sol</sub>) &uarr; &nbsp;&rarr;&nbsp; dm/dt &uarr;</>}
+        analogy="Washing a dirty dish: rinsing once with a large volume removes less than rinsing three times with smaller amounts. Fresh water keeps the concentration gradient high; saturated water stops cleaning."
+        infoTitle="Multiple Pours — The Physics of Refreshing"
+        infoContent={
+          <>
+            <p>
+              From the Noyes-Whitney equation, extraction rate is proportional to
+              <strong>(C_sat − C_sol)</strong> — the concentration gradient between saturated
+              grounds and the surrounding water. As C_sol rises toward C_sat, this gradient
+              collapses and extraction stalls.
+            </p>
+            <p>
+              In a single continuous pour, water that has already extracted coffee compounds
+              sits around the grounds with elevated C_sol. Each subsequent pour of fresh water
+              flushes this solution out and resets C_sol to near zero, instantly restoring
+              the full concentration gradient. This is why a 3-pour recipe consistently
+              extracts more than a single pour of identical total water, even with the same
+              contact time.
+            </p>
+            <p>
+              <strong>The bloom pour specifically:</strong> the first pour serves a separate purpose —
+              allowing CO2 to degas. CO2 forms a hydrophobic barrier around each particle that
+              actively repels water. The bloom lets this escape before the main extraction pours.
+              Fresh beans (1–7 days post-roast) have much more CO2 and benefit from a longer
+              bloom rest (45–60 seconds). Stale beans can often skip the bloom entirely.
+            </p>
+            <ul>
+              <li>Bloom: 2–3× coffee dose in water. E.g., 30g coffee → 60–90g bloom water.</li>
+              <li>Rest time: 30–45s for rested beans, up to 60s for very fresh beans.</li>
+              <li>Main pours: each separated by 15–30s allows partial drawdown, refreshing concentration gradient.</li>
+              <li>More pours = more gradient resets = higher potential EY from the same dose.</li>
+            </ul>
+          </>
+        }
+      >
+        <p>
+          Each new pour flushes concentrated water from around the grounds and replaces it with fresh solvent.
+          The concentration gradient <strong>(C_sat − C_sol)</strong> resets to maximum, and extraction accelerates.
+        </p>
+        <ul>
+          <li><strong>Bloom pour</strong> — Degasses CO2 that would otherwise repel water. Essential for fresh beans.</li>
+          <li><strong>2nd–3rd pours</strong> — Each restores the gradient; extraction jumps at every pour.</li>
+          <li><strong>Pour timing</strong> — Wait for partial drawdown between pours to keep water column in the ideal range.</li>
+        </ul>
+      </EqCard>
     </section>
   );
 }
