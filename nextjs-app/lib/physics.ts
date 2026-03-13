@@ -144,6 +144,22 @@ export function coneWaterSurfaceDiameterMM(
   return Math.min(2 * (h_bed_from_tip_mm + wColMM) * t, topDiameterMM);
 }
 
+/**
+ * Fraction of flow that bypasses the coffee bed due to poor pouring technique.
+ * Higher = more water reaches the cup without extracting, lowering EY and TDS.
+ * Based on pour pattern, paper avoidance, and whether the bed is levelled by swirling.
+ */
+export function channelingFraction(
+  pourPattern: 'center' | 'circular',
+  avoidPaper: boolean,
+  swirl: boolean
+): number {
+  const base = pourPattern === 'circular' ? 0 : 0.07;
+  const paperPenalty = avoidPaper ? 0 : 0.07;
+  const swirlBonus = swirl ? 0.03 : 0;
+  return Math.max(0.03, base + paperPenalty + 0.03 - swirlBonus);
+}
+
 /** Liquid retained ratio — water trapped in spent coffee bed */
 export const LRR = 2.0;
 

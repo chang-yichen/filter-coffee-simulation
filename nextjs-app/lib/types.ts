@@ -13,6 +13,11 @@ export interface BrewParams {
   dripperType: 'cone' | 'cylinder';
   diameter: number;      // mm
   pourSchedule?: PourEntry[];  // fixed schedule; overrides numPours auto-spacing
+  // Pouring technique (all default to best-practice = true/circular/even)
+  pourPattern: 'center' | 'circular';
+  avoidPaper: boolean;
+  bloomWetting: 'even' | 'center';
+  swirl: boolean;
 }
 
 export interface BrewConstants {
@@ -27,6 +32,7 @@ export interface BrewConstants {
   waterPerPours: number[]; // grams for each individual pour
   maxSoluble: number;    // max extractable mass (g)
   bedCapacity: number;   // water retained in bed = LRR × dose (g)
+  channelingFrac: number; // fraction of flow that bypasses the bed (0..0.21)
   // Cone geometry (only meaningful when dripperType === 'cone')
   bedTopDiamMM: number;  // actual physical bed top diameter (mm) from cone geometry
   coneHBedMM: number;    // actual bed height from cone tip (mm)

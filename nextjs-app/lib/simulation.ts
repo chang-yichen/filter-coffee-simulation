@@ -2,7 +2,8 @@ import type { BrewParams, BrewConstants, AnimState, SimResult } from './types';
 import {
   kinematicViscosity, permeability, diffusionFactor, surfaceAreaFactor,
   agitationFromPour, decayAgitation, agitationPermeabilityMultiplier,
-  darcyFlowRate, bedDepthMM, coneBedTopDiameterMM, V60_HALF_ANGLE, LRR, G,
+  darcyFlowRate, bedDepthMM, coneBedTopDiameterMM, channelingFraction,
+  V60_HALF_ANGLE, LRR, G,
 } from './physics';
 
 // ---- Cone water geometry helpers ----
@@ -79,6 +80,11 @@ export function buildBrewConstants(p: BrewParams): BrewConstants {
     pourStarts, pourDurs, waterPerPours,
     maxSoluble: p.dose * 0.30,
     bedCapacity: LRR * p.dose,
+    channelingFrac: channelingFraction(
+      p.pourPattern ?? 'circular',
+      p.avoidPaper ?? true,
+      p.swirl ?? true,
+    ),
     bedTopDiamMM, coneHBedMM, coneHBedM, maxWaterColMM,
   };
 }
@@ -87,21 +93,20 @@ export function buildBrewConstants(p: BrewParams): BrewConstants {
 
 function extractionIncrement(
   p: BrewParams, s: BrewConstants,
-  extracted: number, wCol: number, agitation: number, dt: number
+  extracted: number, wCol: number, agitation: number, dt: number,
+  curPour: number,
 ): number {
   const sa = surfaceAreaFactor(p.grind);
   const df = diffusionFactor(p.temp);
   const frac = extracted / s.maxSoluble;
-  // drive = 1 at start, 0 at maxSoluble (30% EY). The old 1.5× multiplier
-  // hard-capped extraction at 20% EY regardless of grind — removing it allows
-  // fine grind to over-extract and coarse grind to under-extract naturally.
   const drive = Math.max(0, 1 - frac);
   const contact = Math.min(1, (wCol * 1000 + s.bedDepth * 0.5) / s.bedDepth);
-  // Agitation slightly boosts extraction (better mixing at surface)
   const agitBoost = 1.0 + 0.3 * agitation;
-  // Rate constant lowered (0.003→0.0022) to keep medium grind in 18-22% EY
-  // after removing the artificial drive cap.
-  const rate = 0.0026 * p.dose * sa * df * drive * contact * agitBoost;
+  // Bloom wetting: uneven saturation limits CO2 degassing → lower effective surface area
+  const bloomFactor = curPour === 1 && (p.bloomWetting ?? 'even') === 'center' ? 0.50 : 1.0;
+  // Channeling: fraction of water bypasses bed → less water does extraction work
+  const channelingFactor = 1 - s.channelingFrac;
+  const rate = 0.0026 * p.dose * sa * df * drive * contact * agitBoost * bloomFactor * channelingFactor;
   return Math.min(s.maxSoluble - extracted, rate * dt);
 }
 
@@ -154,8 +159,12 @@ export function simulateFull(p: BrewParams): SimResult {
       : wCol * s.A_SI * 1e6;
     const dripG = Math.min(Q * 1e6 * dt, maxDrainG);
 
+    // Channeling bypass: fraction of flow reaches cup without touching grounds
+    const bypassG = dripG * s.channelingFrac;
+    const bedDripG = dripG - bypassG;
+
     // Water absorption: the bed retains LRR×dose grams total (never reaches cup)
-    const absorb = Math.min(s.bedCapacity - absorbed, dripG);
+    const absorb = Math.min(s.bedCapacity - absorbed, bedDripG);
     absorbed += absorb;
     if (p.dripperType === 'cone' && s.coneHBedM > 0) {
       const A_surf = coneWaterSurfaceAreaM2(s.coneHBedM, wCol);
@@ -165,7 +174,7 @@ export function simulateFull(p: BrewParams): SimResult {
     }
 
     // Extraction
-    extracted += extractionIncrement(p, s, extracted, wCol, agitation, dt);
+    extracted += extractionIncrement(p, s, extracted, wCol, agitation, dt, curPour);
 
     // Sample every second
     // Water height = free water above bed + bed depth = total visible level in dripper
@@ -265,10 +274,13 @@ export function animStep(
     ? coneWaterVolumeM3(s.coneHBedM, a.wCol) * 1e6
     : a.wCol * s.A_SI * 1e6;
   const dripG = Math.min(a.Q * 1e6 * dt, maxDrainG);
+  // Channeling bypass: fraction of flow reaches cup without touching grounds
+  const bypassG = dripG * s.channelingFrac;
+  const bedDripG = dripG - bypassG;
   // Water absorbed by coffee bed — retained in grounds, never reaches cup
-  const absorb = Math.min(s.bedCapacity - a.absorbed, dripG);
+  const absorb = Math.min(s.bedCapacity - a.absorbed, bedDripG);
   a.absorbed += absorb;
-  a.dripped += dripG - absorb;  // only cup-bound water
+  a.dripped += bedDripG - absorb + bypassG;  // cup-bound water (bed contact + bypass)
   if (p.dripperType === 'cone' && s.coneHBedM > 0) {
     const A_surf = coneWaterSurfaceAreaM2(s.coneHBedM, a.wCol);
     a.wCol = Math.max(0, a.wCol - (dripG * 1e-6) / A_surf);
@@ -277,7 +289,7 @@ export function animStep(
   }
 
   // Extraction
-  a.extracted += extractionIncrement(p, s, a.extracted, a.wCol, a.agitationEnergy, dt);
+  a.extracted += extractionIncrement(p, s, a.extracted, a.wCol, a.agitationEnergy, dt, a.curPour);
 
   // Spawn drip drops — initial velocity proportional to drip rate
   const dripRate = a.Q * 1e6; // g/s
