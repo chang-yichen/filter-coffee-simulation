@@ -57,21 +57,29 @@ export function surfaceAreaFactor(grindMicrons: number): number {
  * low mobility (μ_p in Einstein-Smoluchowski), requiring higher thermal energy
  * to diffuse out. Below ~90°C, extraction is significantly reduced.
  *
- * Dark roasts: roasting breaks down cellulosic cell walls, making compounds
- * more accessible regardless of temperature. Slightly more efficient at lower
- * temps but the max-soluble ceiling (30%) handles the overall yield difference.
+ * Dark roasts: heavily degraded cell walls make compounds readily accessible
+ * even at low temperatures. However, above ~90°C the bitter melanoidins and
+ * acrid pyrolytic degradation compounds become increasingly soluble — pushing
+ * EY past the ideal 22% ceiling quickly and producing a harsh cup. The factor
+ * rises steeply with temperature to model this over-extraction risk.
  *
- * Medium roast: baseline = 1.0.
+ * Medium roast: baseline = 1.0 (flat — wide temperature tolerance).
  */
 export function roastCellFactor(
   roastLevel: 'light' | 'medium' | 'dark',
   temp: number,
 ): number {
-  if (roastLevel === 'dark')   return 1.10;  // more porous cell structure
-  if (roastLevel === 'medium') return 1.00;
-  // Light: linear ramp 0.60 at 70°C → 1.00 at 100°C
   const t = Math.max(70, Math.min(100, temp));
-  return 0.60 + (t - 70) * (0.40 / 30);
+  if (roastLevel === 'medium') return 1.00;
+  if (roastLevel === 'light') {
+    // Dense cell structure; heavy compounds need high thermal energy
+    // 0.60 at 70°C → 1.00 at 100°C
+    return 0.60 + (t - 70) * (0.40 / 30);
+  }
+  // Dark: porous structure extracts readily, but bitter compounds
+  // become increasingly soluble above 90°C → over-extraction at high temps.
+  // 1.00 at 70°C → 1.20 at 100°C (steeper than light, already accessible)
+  return 1.00 + (t - 70) * (0.20 / 30);
 }
 
 // ---- Agitation model ----
