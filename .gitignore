@@ -1,0 +1,23 @@
+# macOS
+.DS_Store
+
+# Claude / editor
+.claude/
+
+# PDF source material and extracted pages
+*.pdf
+pdf_pages*/
+
+# Screenshots / debug images
+*.png
+
+# Playwright logs
+.playwright-mcp/
+
+# Next.js
+nextjs-app/.next/
+nextjs-app/node_modules/
+nextjs-app/out/
+
+# Env files
+.env*

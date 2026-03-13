@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Physics of Filter Coffee — Interactive Simulator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --coffee-dark: #2C1810;
+            --coffee-medium: #6F4E37;
+            --coffee-light: #C4A882;
+            --coffee-cream: #F5E6D3;
+            --coffee-water: #4A90D9;
+            --coffee-hot: #E85D3A;
+            --bg: #FAF6F1;
+            --text: #2C1810;
+            --card-bg: #FFFFFF;
+            --border: #E8DDD0;
+            --accent: #8B5E3C;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+
+        header {
+            background: linear-gradient(135deg, var(--coffee-dark) 0%, var(--coffee-medium) 100%);
+            color: white; padding: 2.5rem 2rem; text-align: center;
+        }
+        header h1 { font-family: 'Playfair Display', serif; font-size: 2.5rem; font-weight: 700; margin-bottom: 0.5rem; }
+        header p { font-size: 1.05rem; opacity: 0.85; max-width: 600px; margin: 0 auto; font-weight: 300; }
+
+        .container { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+
+        /* ---- Animation Section ---- */
+        .brew-animation-section {
+            background: var(--card-bg); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(44,24,16,0.06);
+            margin-bottom: 2rem;
+        }
+        .brew-animation-section h2 {
+            font-family: 'Playfair Display', serif; font-size: 1.4rem;
+            color: var(--coffee-dark); margin-bottom: 0.3rem;
+        }
+        .brew-animation-section .subtitle { font-size: 0.8rem; color: var(--coffee-light); margin-bottom: 1rem; }
+
+        .anim-layout { display: flex; gap: 2rem; align-items: flex-start; flex-wrap: wrap; }
+        .anim-canvas-wrap { flex: 0 0 380px; text-align: center; }
+        .anim-canvas-wrap canvas { border-radius: 12px; background: #FDF9F5; }
+        .anim-sidebar { flex: 1; min-width: 260px; }
+
+        .anim-controls { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .anim-btn {
+            padding: 0.5rem 1.2rem; font-size: 0.85rem; border: 1px solid var(--border);
+            border-radius: 10px; background: var(--bg); color: var(--coffee-medium);
+            cursor: pointer; font-weight: 600; font-family: inherit; transition: all 0.2s;
+        }
+        .anim-btn:hover { background: var(--coffee-medium); color: white; }
+        .anim-btn.active { background: var(--coffee-medium); color: white; }
+        .anim-btn:disabled { opacity: 0.4; cursor: default; }
+
+        .anim-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; }
+        .anim-stat {
+            background: var(--bg); border-radius: 10px; padding: 0.8rem; text-align: center;
+        }
+        .anim-stat .stat-val {
+            font-size: 1.5rem; font-weight: 700; color: var(--coffee-medium);
+            font-variant-numeric: tabular-nums;
+        }
+        .anim-stat .stat-unit { font-size: 0.75rem; font-weight: 400; }
+        .anim-stat .stat-label { font-size: 0.7rem; color: var(--coffee-light); font-weight: 500; margin-top: 0.15rem; }
+
+        .anim-phase {
+            margin-top: 1rem; padding: 0.8rem 1rem; border-radius: 10px;
+            background: linear-gradient(135deg, #FFF8F0, #FEF3E8);
+            border-left: 4px solid var(--coffee-hot); font-size: 0.85rem;
+        }
+        .anim-phase .phase-title { font-weight: 600; color: var(--coffee-hot); }
+
+        .speed-control { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.8rem; font-size: 0.8rem; color: var(--coffee-light); }
+        .speed-control select {
+            padding: 0.3rem 0.5rem; border-radius: 6px; border: 1px solid var(--border);
+            font-family: inherit; font-size: 0.8rem;
+        }
+
+        /* ---- Sim Grid ---- */
+        .sim-grid { display: grid; grid-template-columns: 320px 1fr; gap: 2rem; margin-bottom: 3rem; }
+        .controls-panel {
+            background: var(--card-bg); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(44,24,16,0.06);
+            position: sticky; top: 1rem; max-height: calc(100vh - 2rem); overflow-y: auto;
+        }
+        .controls-panel h2 { font-family: 'Playfair Display', serif; font-size: 1.3rem; margin-bottom: 1rem; color: var(--coffee-medium); }
+
+        .control-group { margin-bottom: 1.1rem; }
+        .control-group label {
+            display: flex; justify-content: space-between; align-items: baseline;
+            font-size: 0.85rem; font-weight: 500; margin-bottom: 0.3rem; color: var(--coffee-dark);
+        }
+        .control-group .value { font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+
+        input[type="range"] {
+            -webkit-appearance: none; width: 100%; height: 6px; border-radius: 3px;
+            background: var(--coffee-cream); outline: none;
+        }
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none; width: 18px; height: 18px; border-radius: 50%;
+            background: var(--coffee-medium); cursor: pointer; border: 2px solid white;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+        }
+
+        .control-section-title {
+            font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--coffee-light); margin: 1.1rem 0 0.5rem; padding-top: 0.9rem; border-top: 1px solid var(--border);
+        }
+        .control-section-title:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+        .results-panel { display: flex; flex-direction: column; gap: 2rem; }
+        .result-card {
+            background: var(--card-bg); border-radius: 16px; padding: 1.5rem;
+            border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(44,24,16,0.06);
+        }
+        .result-card h3 { font-family: 'Playfair Display', serif; font-size: 1.15rem; margin-bottom: 0.3rem; color: var(--coffee-dark); }
+        .result-card .subtitle { font-size: 0.8rem; color: var(--coffee-light); margin-bottom: 1rem; }
+
+        .metrics-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.2rem; }
+        .metric { background: var(--bg); border-radius: 12px; padding: 0.9rem; text-align: center; }
+        .metric .metric-value { font-size: 1.7rem; font-weight: 700; color: var(--coffee-medium); font-variant-numeric: tabular-nums; }
+        .metric .metric-unit { font-size: 0.8rem; font-weight: 400; }
+        .metric .metric-label { font-size: 0.72rem; color: var(--coffee-light); font-weight: 500; margin-top: 0.15rem; }
+
+        .chart-container { position: relative; height: 260px; }
+        .bcc-container { position: relative; height: 300px; }
+
+        .quality-badge { display: inline-block; padding: 0.2rem 0.7rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+        .quality-ideal { background: #D4EDDA; color: #155724; }
+        .quality-under { background: #FFF3CD; color: #856404; }
+        .quality-over { background: #F8D7DA; color: #721C24; }
+        .quality-weak { background: #E2E3E5; color: #383D41; }
+        .quality-strong { background: #D6D8DB; color: #383D41; }
+
+        .preset-buttons { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+        .preset-btn {
+            padding: 0.4rem 0.8rem; font-size: 0.75rem; border: 1px solid var(--border);
+            border-radius: 20px; background: var(--bg); color: var(--coffee-medium);
+            cursor: pointer; font-weight: 500; transition: all 0.2s; font-family: inherit;
+        }
+        .preset-btn:hover { background: var(--coffee-medium); color: white; }
+
+        /* ---- Equations ---- */
+        .equations-section { margin-top: 1rem; }
+        .equation-card {
+            background: var(--card-bg); border-radius: 16px; padding: 2rem;
+            border: 1px solid var(--border); box-shadow: 0 2px 12px rgba(44,24,16,0.06);
+            margin-bottom: 1.5rem;
+        }
+        .equation-card h3 { font-family: 'Playfair Display', serif; font-size: 1.3rem; color: var(--coffee-dark); margin-bottom: 0.5rem; }
+        .equation-card .eq-tagline { font-size: 0.85rem; color: var(--coffee-medium); font-style: italic; margin-bottom: 1rem; }
+        .equation-box {
+            background: var(--bg); border-radius: 10px; padding: 1.2rem; text-align: center;
+            font-size: 1.3rem; margin: 1rem 0; border-left: 4px solid var(--coffee-light); font-family: 'Georgia', serif;
+        }
+        .equation-box .eq-label {
+            display: block; font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.1em;
+            color: var(--coffee-light); margin-bottom: 0.5rem; font-family: 'Inter', sans-serif;
+        }
+        .eq-explanation { font-size: 0.9rem; color: #555; line-height: 1.7; }
+        .eq-explanation ul { padding-left: 1.2rem; margin: 0.5rem 0; }
+        .eq-explanation li { margin-bottom: 0.3rem; }
+        .eq-explanation strong { color: var(--coffee-dark); }
+        .analogy {
+            background: linear-gradient(135deg, #FFF8F0, #FEF3E8); border-radius: 10px;
+            padding: 1rem 1.2rem; margin-top: 1rem; font-size: 0.85rem; border-left: 4px solid var(--coffee-hot);
+        }
+        .analogy::before { content: "Analogy: "; font-weight: 600; color: var(--coffee-hot); }
+
+        footer { text-align: center; padding: 2rem; color: var(--coffee-light); font-size: 0.8rem; border-top: 1px solid var(--border); margin-top: 2rem; }
+
+        @media (max-width: 900px) {
+            .sim-grid { grid-template-columns: 1fr; }
+            .controls-panel { position: static; max-height: none; }
+            header h1 { font-size: 1.8rem; }
+            .anim-canvas-wrap { flex: 1 1 100%; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>The Physics of Filter Coffee</h1>
+    <p>An interactive simulation based on Jonathan Gagn&eacute;'s book. Explore how grind size, temperature, and pouring affect your brew.</p>
+</header>
+
+<div class="container">
+
+    <!-- ============ BREWING ANIMATION ============ -->
+    <div class="brew-animation-section">
+        <h2>Live Brew Visualisation</h2>
+        <div class="subtitle">Watch the brewing process unfold in real time — water flowing, coffee extracting, drips forming</div>
+        <div class="anim-layout">
+            <div class="anim-canvas-wrap">
+                <canvas id="brewAnim" width="380" height="520"></canvas>
+            </div>
+            <div class="anim-sidebar">
+                <div class="anim-controls">
+                    <button class="anim-btn" id="btn-play" onclick="animPlay()">&#9654; Brew</button>
+                    <button class="anim-btn" id="btn-pause" onclick="animPause()" disabled>&#10074;&#10074; Pause</button>
+                    <button class="anim-btn" id="btn-reset" onclick="animReset()">&#8634; Reset</button>
+                </div>
+                <div class="speed-control">
+                    <span>Speed:</span>
+                    <select id="anim-speed" onchange="animSpeedChange()">
+                        <option value="1">1x (real time)</option>
+                        <option value="3">3x</option>
+                        <option value="10" selected>10x</option>
+                        <option value="30">30x</option>
+                        <option value="60">60x (fast)</option>
+                    </select>
+                </div>
+
+                <div class="anim-stats" style="margin-top: 1rem;">
+                    <div class="anim-stat">
+                        <div class="stat-val"><span id="a-time">0:00</span></div>
+                        <div class="stat-label">Elapsed Time</div>
+                    </div>
+                    <div class="anim-stat">
+                        <div class="stat-val"><span id="a-drip">0.0</span><span class="stat-unit"> g/s</span></div>
+                        <div class="stat-label">Drip Rate</div>
+                    </div>
+                    <div class="anim-stat">
+                        <div class="stat-val"><span id="a-ey">0.0</span><span class="stat-unit">%</span></div>
+                        <div class="stat-label">Extraction Yield</div>
+                    </div>
+                    <div class="anim-stat">
+                        <div class="stat-val"><span id="a-cup">0</span><span class="stat-unit"> g</span></div>
+                        <div class="stat-label">In the Cup</div>
+                    </div>
+                    <div class="anim-stat">
+                        <div class="stat-val"><span id="a-poured">0</span><span class="stat-unit"> g</span></div>
+                        <div class="stat-label">Water Poured</div>
+                    </div>
+                    <div class="anim-stat">
+                        <div class="stat-val"><span id="a-tds">0.00</span><span class="stat-unit">%</span></div>
+                        <div class="stat-label">TDS</div>
+                    </div>
+                </div>
+
+                <div class="anim-phase" id="a-phase">
+                    <span class="phase-title">Ready</span> — Adjust parameters below, then press Brew
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ SIM GRID ============ -->
+    <div class="sim-grid">
+        <div class="controls-panel">
+            <h2>Brew Parameters</h2>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="applyPreset('v60classic')">V60 Classic</button>
+                <button class="preset-btn" onclick="applyPreset('v60iced')">V60 Iced</button>
+                <button class="preset-btn" onclick="applyPreset('coarse')">Coarse Grind</button>
+                <button class="preset-btn" onclick="applyPreset('fine')">Fine Grind</button>
+                <button class="preset-btn" onclick="applyPreset('cold')">Low Temp</button>
+            </div>
+
+            <div class="control-section-title">Coffee</div>
+            <div class="control-group">
+                <label>Coffee Dose <span class="value" id="dose-val">20 g</span></label>
+                <input type="range" id="dose" min="10" max="40" step="0.5" value="20" oninput="update()">
+            </div>
+            <div class="control-group">
+                <label>Grind Size <span class="value" id="grind-val">Medium (600 &mu;m)</span></label>
+                <input type="range" id="grind" min="200" max="1200" step="10" value="600" oninput="update()">
+            </div>
+
+            <div class="control-section-title">Water</div>
+            <div class="control-group">
+                <label>Total Water <span class="value" id="water-val">320 g</span></label>
+                <input type="range" id="water" min="150" max="600" step="5" value="320" oninput="update()">
+            </div>
+            <div class="control-group">
+                <label>Water Temperature <span class="value" id="temp-val">93 &deg;C</span></label>
+                <input type="range" id="temp" min="70" max="100" step="0.5" value="93" oninput="update()">
+            </div>
+
+            <div class="control-section-title">Pouring</div>
+            <div class="control-group">
+                <label>Pour Rate <span class="value" id="pourrate-val">5.0 ml/s</span></label>
+                <input type="range" id="pourrate" min="1" max="12" step="0.1" value="5" oninput="update()">
+            </div>
+            <div class="control-group">
+                <label>Number of Pours <span class="value" id="pours-val">3</span></label>
+                <input type="range" id="pours" min="1" max="6" step="1" value="3" oninput="update()">
+            </div>
+
+            <div class="control-section-title">Dripper</div>
+            <div class="control-group">
+                <label>Dripper Type</label>
+                <select id="dripper" onchange="update()" style="width:100%;padding:0.4rem;border-radius:8px;border:1px solid var(--border);font-family:inherit;font-size:0.85rem;">
+                    <option value="cone">Conical (V60)</option>
+                    <option value="cylinder">Flat-Bottom (Kalita)</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>Dripper Diameter <span class="value" id="diameter-val">100 mm</span></label>
+                <input type="range" id="diameter" min="60" max="130" step="1" value="100" oninput="update()">
+            </div>
+        </div>
+
+        <div class="results-panel">
+            <div class="result-card">
+                <h3>Brew Summary</h3>
+                <div class="subtitle">Instant results from the simulation</div>
+                <div class="metrics-row">
+                    <div class="metric">
+                        <div class="metric-value"><span id="m-brewtime">3:12</span></div>
+                        <div class="metric-label">Total Brew Time</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value"><span id="m-ey-num">20.1</span><span class="metric-unit">%</span></div>
+                        <div class="metric-label">Extraction Yield</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value"><span id="m-tds-num">1.35</span><span class="metric-unit">%</span></div>
+                        <div class="metric-label">Concentration (TDS)</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value"><span id="m-bev-num">280</span><span class="metric-unit">g</span></div>
+                        <div class="metric-label">Beverage Weight</div>
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <span class="quality-badge" id="quality-badge">Ideal</span>
+                </div>
+            </div>
+
+            <div class="result-card">
+                <h3>Drip Rate Over Time</h3>
+                <div class="subtitle">Governed by Darcy's Law — exponential decay between pours</div>
+                <div class="chart-container"><canvas id="dripChart"></canvas></div>
+            </div>
+            <div class="result-card">
+                <h3>Water Column Height</h3>
+                <div class="subtitle">Rises with each pour, then drains through the coffee bed</div>
+                <div class="chart-container"><canvas id="waterChart"></canvas></div>
+            </div>
+            <div class="result-card">
+                <h3>Extraction Over Time</h3>
+                <div class="subtitle">Cumulative extraction — fast at first, then slowing</div>
+                <div class="chart-container"><canvas id="extractionChart"></canvas></div>
+            </div>
+            <div class="result-card">
+                <h3>Coffee Brewing Control Chart</h3>
+                <div class="subtitle">Where your brew lands on Lockhart's classic chart</div>
+                <div class="bcc-container"><canvas id="bccChart"></canvas></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============ EQUATIONS ============ -->
+    <div class="equations-section">
+        <h2 style="font-family:'Playfair Display',serif;font-size:1.8rem;margin-bottom:1.5rem;text-align:center;">The Equations, Explained Simply</h2>
+
+        <div class="equation-card">
+            <h3>1. Darcy's Law — How Water Flows Through Coffee</h3>
+            <div class="eq-tagline">The fundamental equation of percolation brewing</div>
+            <div class="equation-box">
+                <span class="eq-label">Darcy's Law</span>
+                Q = (k &middot; A) / (&mu; &middot; L) &middot; (&rho; &middot; g &middot; h)
+            </div>
+            <div class="eq-explanation">
+                <p>This predicts the <strong>drip rate Q</strong> — how fast coffee flows out the bottom:</p>
+                <ul>
+                    <li><strong>k (permeability)</strong> — How easily water passes through the coffee bed. Coarser grinds = bigger gaps = higher k = faster flow.</li>
+                    <li><strong>A (area)</strong> — Cross-sectional area of the dripper.</li>
+                    <li><strong>&mu; (viscosity)</strong> — How "thick" the water is. Hotter water is less viscous, so it flows faster.</li>
+                    <li><strong>L (bed depth)</strong> — Deeper bed = slower flow. This is why coffee dose matters!</li>
+                    <li><strong>&rho;&middot;g&middot;h (pressure)</strong> — Weight of the water column. Taller column = more pressure = faster flow.</li>
+                </ul>
+            </div>
+            <div class="analogy">The coffee bed is like a packed sponge. Coarse grounds are a loose sponge (water runs through); fine grounds are dense (water squeezes through tiny gaps). Hot water is thin like oil — slides through easily — while cold water is thicker, like honey.</div>
+        </div>
+
+        <div class="equation-card">
+            <h3>2. Brew Time — How Long Until the Last Drop</h3>
+            <div class="eq-tagline">Derived from Darcy's Law for a cylindrical dripper</div>
+            <div class="equation-box">
+                <span class="eq-label">Total Brew Time</span>
+                T = (&nu; &middot; L) / (k &middot; g) &middot; ln(R &middot; &rho;<sub>c</sub> / &rho;<sub>w</sub>)
+            </div>
+            <div class="eq-explanation">
+                <ul>
+                    <li><strong>&nu;</strong> — Kinematic viscosity. Hotter &rarr; lower &nu; &rarr; faster brew.</li>
+                    <li><strong>L</strong> — Bed depth. Deeper = longer brew.</li>
+                    <li><strong>k</strong> — Permeability. Coarser grind = shorter brew.</li>
+                    <li><strong>R</strong> — Brew ratio (water/coffee). Inside a logarithm, so effect is gentle.</li>
+                </ul>
+                <p><strong>Key insight:</strong> dripper width doesn't appear! Only bed depth controls time.</p>
+            </div>
+            <div class="analogy">Draining a bathtub through gravel: making the tub wider doesn't change drain time. More area means faster drainage but also more water — they cancel out. Only gravel thickness matters.</div>
+        </div>
+
+        <div class="equation-card">
+            <h3>3. Noyes-Whitney — How Coffee Dissolves</h3>
+            <div class="eq-tagline">The rate at which flavor compounds leave the grounds</div>
+            <div class="equation-box">
+                <span class="eq-label">Dissolution Rate</span>
+                dm/dt = A &middot; (D / L) &middot; (C<sub>sat</sub> &minus; C<sub>sol</sub>)
+            </div>
+            <div class="eq-explanation">
+                <ul>
+                    <li><strong>A (surface area)</strong> — Finer grind = massively more surface = faster extraction.</li>
+                    <li><strong>D (diffusion coefficient)</strong> — Higher temp &rarr; higher D &rarr; faster extraction.</li>
+                    <li><strong>C<sub>sat</sub> &minus; C<sub>sol</sub></strong> — Extraction slows as water gets concentrated. Fresh water extracts fastest.</li>
+                </ul>
+            </div>
+            <div class="analogy">Dissolving sugar: powdered sugar (fine grind) vanishes fast; a sugar cube (coarse) is slow. Stirring helps — just as flowing water keeps "refreshing" the grounds with clean water.</div>
+        </div>
+
+        <div class="equation-card">
+            <h3>4. Einstein-Smoluchowski — Temperature &amp; Diffusion</h3>
+            <div class="eq-tagline">Why hotter water extracts more and different flavors</div>
+            <div class="equation-box">
+                <span class="eq-label">Diffusion Coefficient</span>
+                D = &mu;<sub>p</sub> &middot; k<sub>B</sub> &middot; T
+            </div>
+            <div class="eq-explanation">
+                <p>Temperature has a <strong>double effect</strong>: (1) dissolves compounds faster at the surface, and (2) transports them away faster via diffusion. Different molecules have different mobilities — that's why temperature changes the <em>flavor profile</em>, not just speed.</p>
+            </div>
+            <div class="analogy">Molecules in water are like people in a crowd. Cold = shuffling slowly. Hot = moving fast, bumping into each other — everything spreads and mixes quickly.</div>
+        </div>
+
+        <div class="equation-card">
+            <h3>5. Extraction Yield — Measuring Your Brew</h3>
+            <div class="eq-tagline">The fraction of coffee that ended up in your cup</div>
+            <div class="equation-box">
+                <span class="eq-label">Extraction Yield</span>
+                EY = (C &middot; B) / D
+            </div>
+            <div class="eq-explanation">
+                <p><strong>C</strong> = TDS concentration, <strong>B</strong> = beverage weight, <strong>D</strong> = coffee dose.</p>
+                <p>Ideal: <strong>18–22%</strong>. Below 18% = sour/grassy (under). Above 22% = bitter/astringent (over). Only ~30% of coffee is soluble — the art is extracting just the right amount.</p>
+            </div>
+            <div class="analogy">Starting with 20g of coffee and extracting 4g of solubles = 20% yield. You can't get everything out, and you wouldn't want to — the last compounds taste harsh.</div>
+        </div>
+
+        <div class="equation-card">
+            <h3>6. Kinematic Viscosity — Temperature &amp; Flow</h3>
+            <div class="eq-tagline">Why hotter water flows faster through the bed</div>
+            <div class="equation-box">
+                <span class="eq-label">Kinematic Viscosity</span>
+                &nu; = &mu; / &rho;
+            </div>
+            <div class="eq-explanation">
+                <p>As temperature rises, viscosity drops significantly. <strong>Flow speeds up ~20% from 80&deg;C to 95&deg;C.</strong> If you brew cooler, grind coarser to compensate.</p>
+            </div>
+            <div class="analogy">Cold honey pours slowly; warm honey pours easily. Water does the same — less dramatically, but at the scale of tiny gaps between coffee grounds, it matters a lot.</div>
+        </div>
+    </div>
+</div>
+
+<footer>
+    Based on <em>The Physics of Filter Coffee</em> by Jonathan Gagn&eacute; (2020). Educational simulation — real brewing involves many more variables!
+</footer>
+
+<script>
+// ======================== PHYSICS ENGINE ========================
+
+function dynamicViscosity(T) {
+    return 2.414e-5 * Math.pow(10, 247.8 / (T + 273.15 - 140));
+}
+
+function kinViscosity(T) {
+    var mu = dynamicViscosity(T);
+    var rho = 1000 * (1 - (T - 4) * (T - 4) * 6e-6);
+    return mu / rho;
+}
+
+// Permeability: calibrated so 600µm grind + standard V60 ≈ 3 min brew
+function permeability(grindMicrons) {
+    var d = grindMicrons * 1e-6;
+    var porosity = 0.40;
+    // Calibrated shape factor (validated against real V60 brew times)
+    return 0.018 * d * d * Math.pow(porosity, 3) / (180 * Math.pow(1 - porosity, 2));
+}
+
+function diffusionFactor(T) {
+    var Tk = T + 273.15, Tr = 366.15;
+    return (Tk / Tr) * (dynamicViscosity(93) / dynamicViscosity(T));
+}
+
+function surfaceAreaFactor(grind) { return 600 / grind; }
+
+// ======================== SIMULATION ========================
+
+function getParams() {
+    return {
+        dose: parseFloat(document.getElementById('dose').value),
+        grind: parseFloat(document.getElementById('grind').value),
+        waterTotal: parseFloat(document.getElementById('water').value),
+        temp: parseFloat(document.getElementById('temp').value),
+        pourRate: parseFloat(document.getElementById('pourrate').value),
+        numPours: parseInt(document.getElementById('pours').value),
+        dripperType: document.getElementById('dripper').value,
+        diameter: parseFloat(document.getElementById('diameter').value)
+    };
+}
+
+function buildBrewState(p) {
+    var r = p.diameter / 2;
+    var areaTop = Math.PI * r * r; // mm^2
+    var bulkDens = 0.00043; // g/mm^3
+    var bedDepth = p.dripperType === 'cone'
+        ? p.dose / (bulkDens * areaTop * 0.45)
+        : p.dose / (bulkDens * areaTop);
+
+    var k_SI = permeability(p.grind);
+    var L_SI = bedDepth / 1000;
+    var A_SI = areaTop * 1e-6;
+    var nu_SI = kinViscosity(p.temp);
+    var geoFactor = p.dripperType === 'cone' ? 0.75 : 1.0;
+
+    // Pour schedule
+    var waterPerPour = p.waterTotal / p.numPours;
+    var pourDur = waterPerPour / p.pourRate;
+    var estTime = (nu_SI * L_SI) / (k_SI * 9.81) * Math.log(p.waterTotal / p.dose) * 1.2;
+    var spacing = Math.max(pourDur * 1.5, estTime / (p.numPours + 0.5));
+    var pourStarts = [];
+    for (var i = 0; i < p.numPours; i++) pourStarts.push(i * spacing);
+
+    return {
+        k_SI: k_SI, L_SI: L_SI, A_SI: A_SI, nu_SI: nu_SI,
+        geoFactor: geoFactor, bedDepth: bedDepth,
+        pourStarts: pourStarts, pourDur: pourDur,
+        waterPerPour: waterPerPour, p: p,
+        maxSoluble: p.dose * 0.30
+    };
+}
+
+function simulateFull() {
+    var p = getParams();
+    var s = buildBrewState(p);
+    var dt = 0.25, maxT = 600;
+    var wCol = 0, poured = 0, dripped = 0, extracted = 0;
+    var curPour = 0, pouring = false, pourEnd = 0;
+
+    var tD = [], drD = [], whD = [], eyD = [];
+
+    for (var t = 0; t < maxT; t += dt) {
+        if (curPour < p.numPours && t >= s.pourStarts[curPour]) {
+            pouring = true; pourEnd = s.pourStarts[curPour] + s.pourDur; curPour++;
+        }
+        if (pouring && t < pourEnd && poured < p.waterTotal) {
+            var add = Math.min(p.pourRate * dt, p.waterTotal - poured);
+            poured += add; wCol += (add * 1e-6) / s.A_SI;
+        }
+        if (t >= pourEnd) pouring = false;
+
+        var Q = wCol > 0 ? (s.k_SI * s.A_SI * 9.81 * wCol) / (s.nu_SI * s.L_SI) * s.geoFactor : 0;
+        var dg = Math.min(Q * 1e6 * dt, wCol * s.A_SI * 1e6);
+        dripped += dg;
+        wCol = Math.max(0, wCol - (dg * 1e-6) / s.A_SI);
+
+        var sf = surfaceAreaFactor(p.grind);
+        var df = diffusionFactor(p.temp);
+        var frac = extracted / s.maxSoluble;
+        var drive = Math.max(0, 1 - frac * 1.5);
+        var contact = Math.min(1, (wCol * 1000 + s.bedDepth * 0.3) / s.bedDepth);
+        extracted = Math.min(s.maxSoluble, extracted + 0.0008 * p.dose * sf * df * drive * contact * dt);
+
+        if (Math.abs(t % 1) < dt / 2) {
+            tD.push(t); drD.push(Q * 1e6); whD.push(wCol * 1000); eyD.push((extracted / p.dose) * 100);
+        }
+        if (poured >= p.waterTotal * 0.99 && wCol < 0.0003) {
+            // pad one more point
+            tD.push(t); drD.push(0); whD.push(0); eyD.push((extracted / p.dose) * 100);
+            var LRR = 2.0;
+            var bev = p.waterTotal - LRR * p.dose;
+            return { tD:tD, drD:drD, whD:whD, eyD:eyD, brewTime:t,
+                EY: (extracted/p.dose)*100, TDS: (extracted/bev)*100,
+                bev: bev, bedDepth: s.bedDepth, dose: p.dose };
+        }
+    }
+    var LRR2 = 2.0, bev2 = p.waterTotal - LRR2 * p.dose;
+    return { tD:tD, drD:drD, whD:whD, eyD:eyD, brewTime: maxT,
+        EY: (extracted/p.dose)*100, TDS: (extracted/bev2)*100,
+        bev: bev2, bedDepth: s.bedDepth, dose: p.dose };
+}
+
+// ======================== STEP-BY-STEP (for animation) ========================
+
+var animState = null;
+
+function animInit() {
+    var p = getParams();
+    var s = buildBrewState(p);
+    animState = {
+        s: s, p: p, t: 0, wCol: 0, poured: 0, dripped: 0, extracted: 0,
+        curPour: 0, pouring: false, pourEnd: 0, Q: 0, done: false,
+        // For cup fill viz
+        cupFill: 0,
+        // Particles for drip animation
+        drops: [], steamParticles: [],
+        // Color of brew (gets darker with extraction)
+        brewColor: function() {
+            var tds = this.extracted > 0 && this.dripped > 0 ? (this.extracted / Math.max(1, this.dripped)) : 0;
+            var darkness = Math.min(1, tds * 70);
+            var r = Math.round(210 - 120 * darkness);
+            var g = Math.round(190 - 130 * darkness);
+            var b = Math.round(140 - 100 * darkness);
+            return 'rgb(' + r + ',' + g + ',' + b + ')';
+        }
+    };
+}
+
+function animStep(dt) {
+    var a = animState, s = a.s, p = a.p;
+    if (a.done) return;
+
+    a.t += dt;
+
+    if (a.curPour < p.numPours && a.t >= s.pourStarts[a.curPour]) {
+        a.pouring = true; a.pourEnd = s.pourStarts[a.curPour] + s.pourDur; a.curPour++;
+    }
+    if (a.pouring && a.t < a.pourEnd && a.poured < p.waterTotal) {
+        var add = Math.min(p.pourRate * dt, p.waterTotal - a.poured);
+        a.poured += add; a.wCol += (add * 1e-6) / s.A_SI;
+    }
+    if (a.t >= a.pourEnd) a.pouring = false;
+
+    a.Q = a.wCol > 0 ? (s.k_SI * s.A_SI * 9.81 * a.wCol) / (s.nu_SI * s.L_SI) * s.geoFactor : 0;
+    var dg = Math.min(a.Q * 1e6 * dt, a.wCol * s.A_SI * 1e6);
+    a.dripped += dg;
+    a.wCol = Math.max(0, a.wCol - (dg * 1e-6) / s.A_SI);
+
+    var sf = surfaceAreaFactor(p.grind), df = diffusionFactor(p.temp);
+    var frac = a.extracted / s.maxSoluble;
+    var drive = Math.max(0, 1 - frac * 1.5);
+    var contact = Math.min(1, (a.wCol * 1000 + s.bedDepth * 0.3) / s.bedDepth);
+    a.extracted = Math.min(s.maxSoluble, a.extracted + 0.0008 * p.dose * sf * df * drive * contact * dt);
+
+    // Random drip drops
+    if (a.Q * 1e6 > 0.1 && Math.random() < Math.min(0.8, a.Q * 1e6 * 0.15)) {
+        a.drops.push({ y: 0, speed: 2 + Math.random() * 2, x: (Math.random() - 0.5) * 8 });
+    }
+
+    // Steam particles
+    if (p.temp > 85 && Math.random() < 0.15) {
+        a.steamParticles.push({ x: (Math.random()-0.5)*40, y: 0, life: 1, speed: 0.3 + Math.random()*0.4 });
+    }
+
+    a.cupFill = a.dripped;
+
+    if (a.poured >= p.waterTotal * 0.99 && a.wCol < 0.0003) {
+        a.done = true;
+    }
+}
+
+// ======================== ANIMATION RENDERER ========================
+
+var animRunning = false, animRafId = null, animSpeed = 10, lastAnimTime = 0;
+
+function animPlay() {
+    if (!animState) animInit();
+    animRunning = true;
+    document.getElementById('btn-play').disabled = true;
+    document.getElementById('btn-pause').disabled = false;
+    lastAnimTime = performance.now();
+    animRafId = requestAnimationFrame(animLoop);
+}
+
+function animPause() {
+    animRunning = false;
+    document.getElementById('btn-play').disabled = false;
+    document.getElementById('btn-pause').disabled = true;
+    if (animRafId) cancelAnimationFrame(animRafId);
+}
+
+function animReset() {
+    animPause();
+    animInit();
+    drawAnimFrame();
+    updateAnimStats();
+    document.getElementById('btn-play').disabled = false;
+    var phaseEl = document.getElementById('a-phase');
+    phaseEl.textContent = '';
+    var title = document.createElement('span');
+    title.className = 'phase-title';
+    title.textContent = 'Ready';
+    phaseEl.appendChild(title);
+    phaseEl.appendChild(document.createTextNode(' \u2014 Adjust parameters, then press Brew'));
+}
+
+function animSpeedChange() {
+    animSpeed = parseInt(document.getElementById('anim-speed').value);
+}
+
+function animLoop(now) {
+    if (!animRunning) return;
+    var realDt = Math.min((now - lastAnimTime) / 1000, 0.05); // cap at 50ms real
+    lastAnimTime = now;
+    var simDt = realDt * animSpeed;
+
+    // Step in small increments for stability
+    var stepSize = 0.1;
+    var remaining = simDt;
+    while (remaining > 0 && !animState.done) {
+        var step = Math.min(stepSize, remaining);
+        animStep(step);
+        remaining -= step;
+    }
+
+    drawAnimFrame();
+    updateAnimStats();
+
+    if (animState.done) {
+        animPause();
+        var phaseEl = document.getElementById('a-phase');
+        phaseEl.textContent = '';
+        var title = document.createElement('span');
+        title.className = 'phase-title';
+        title.textContent = 'Done!';
+        phaseEl.appendChild(title);
+        phaseEl.appendChild(document.createTextNode(' \u2014 Brew complete. Check the results below.'));
+        return;
+    }
+
+    animRafId = requestAnimationFrame(animLoop);
+}
+
+function updateAnimStats() {
+    var a = animState;
+    var min = Math.floor(a.t / 60);
+    var sec = Math.floor(a.t % 60);
+    document.getElementById('a-time').textContent = min + ':' + (sec < 10 ? '0' : '') + sec;
+    document.getElementById('a-drip').textContent = (a.Q * 1e6).toFixed(1);
+    document.getElementById('a-ey').textContent = ((a.extracted / a.p.dose) * 100).toFixed(1);
+    document.getElementById('a-cup').textContent = Math.round(a.dripped);
+    document.getElementById('a-poured').textContent = Math.round(a.poured);
+    var bev = Math.max(1, a.dripped);
+    document.getElementById('a-tds').textContent = ((a.extracted / bev) * 100).toFixed(2);
+
+    // Phase description
+    var phaseEl = document.getElementById('a-phase');
+    var phaseTitle, phaseDesc;
+    if (a.pouring) {
+        phaseTitle = 'Pouring (Pour ' + a.curPour + '/' + a.p.numPours + ')';
+        phaseDesc = 'Water is being added to the dripper, raising the water column.';
+    } else if (a.wCol * 1000 > 1) {
+        phaseTitle = 'Draining';
+        phaseDesc = 'Water percolates through the coffee bed via Darcy\'s Law.';
+    } else if (a.curPour < a.p.numPours) {
+        phaseTitle = 'Waiting for next pour';
+        phaseDesc = 'Bed is nearly drained. Next pour coming soon.';
+    } else {
+        phaseTitle = 'Final drawdown';
+        phaseDesc = 'Last drops draining through. Extraction is slowing.';
+    }
+    phaseEl.textContent = '';
+    var titleSpan = document.createElement('span');
+    titleSpan.className = 'phase-title';
+    titleSpan.textContent = phaseTitle;
+    phaseEl.appendChild(titleSpan);
+    phaseEl.appendChild(document.createTextNode(' \u2014 ' + phaseDesc));
+}
+
+function drawAnimFrame() {
+    var c = document.getElementById('brewAnim');
+    var ctx = c.getContext('2d');
+    var W = c.width, H = c.height;
+    var a = animState;
+
+    ctx.clearRect(0, 0, W, H);
+
+    // Layout constants
+    var dripperCX = W / 2;
+    var dripperTop = 40;
+    var dripperH = 180;
+    var topW = 150, botW = 24;
+    var cupTop = dripperTop + dripperH + 65;
+    var cupH = 130;
+    var cupW = 140;
+
+    var isCone = a.p.dripperType === 'cone';
+
+    // ---- KETTLE / POUR STREAM ----
+    if (a.pouring) {
+        // Kettle spout (simplified)
+        ctx.fillStyle = '#888';
+        ctx.beginPath();
+        ctx.moveTo(dripperCX + 50, 10);
+        ctx.lineTo(dripperCX + 65, 10);
+        ctx.lineTo(dripperCX + 45, 30);
+        ctx.lineTo(dripperCX + 35, 30);
+        ctx.closePath();
+        ctx.fill();
+
+        // Water stream
+        ctx.strokeStyle = 'rgba(74, 144, 217, 0.7)';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(dripperCX + 40, 28);
+        // Slight wobble
+        var wobble = Math.sin(a.t * 8) * 3;
+        ctx.quadraticCurveTo(dripperCX + wobble, dripperTop - 5, dripperCX + wobble * 0.3, dripperTop + 10);
+        ctx.stroke();
+
+        // Splash particles at surface
+        ctx.fillStyle = 'rgba(74, 144, 217, 0.4)';
+        for (var sp = 0; sp < 4; sp++) {
+            var sx = dripperCX + (Math.random() - 0.5) * 30;
+            var sy = dripperTop + 10 + Math.random() * 8;
+            ctx.beginPath();
+            ctx.arc(sx, sy, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    }
+
+    // ---- DRIPPER ----
+    if (isCone) {
+        ctx.beginPath();
+        ctx.moveTo(dripperCX - topW/2, dripperTop);
+        ctx.lineTo(dripperCX - botW/2, dripperTop + dripperH);
+        ctx.lineTo(dripperCX + botW/2, dripperTop + dripperH);
+        ctx.lineTo(dripperCX + topW/2, dripperTop);
+        ctx.closePath();
+        ctx.strokeStyle = '#6F4E37';
+        ctx.lineWidth = 2.5;
+        ctx.stroke();
+
+        // Coffee bed
+        var bedFrac = Math.min(0.65, a.s.bedDepth / 55);
+        var bedTopY = dripperTop + dripperH * (1 - bedFrac);
+        var bedTopW = botW + (topW - botW) * (1 - bedFrac);
+
+        ctx.beginPath();
+        ctx.moveTo(dripperCX - bedTopW/2, bedTopY);
+        ctx.lineTo(dripperCX - botW/2, dripperTop + dripperH);
+        ctx.lineTo(dripperCX + botW/2, dripperTop + dripperH);
+        ctx.lineTo(dripperCX + bedTopW/2, bedTopY);
+        ctx.closePath();
+        ctx.fillStyle = '#8B6F4E';
+        ctx.fill();
+
+        // Grind dots
+        ctx.fillStyle = '#5C3D1E';
+        var dotSz = Math.max(1, Math.min(3.5, a.p.grind / 250));
+        for (var d = 0; d < 45; d++) {
+            var fy = Math.random();
+            var yy = bedTopY + fy * (dripperTop + dripperH - bedTopY);
+            var wAtY = botW + (bedTopW - botW) * (1 - fy);
+            var xx = dripperCX + (Math.random() - 0.5) * wAtY * 0.8;
+            ctx.beginPath(); ctx.arc(xx, yy, dotSz, 0, Math.PI*2); ctx.fill();
+        }
+
+        // Water column
+        var maxWColMM = 60; // mm for visual scaling
+        var wColMM = a.wCol * 1000;
+        var wFrac = Math.min(1 - bedFrac - 0.03, (wColMM / maxWColMM) * (1 - bedFrac));
+        if (wFrac > 0.005) {
+            var wTopY = bedTopY - wFrac * dripperH;
+            var wTopW = botW + (topW - botW) * (1 - bedFrac - wFrac);
+            ctx.beginPath();
+            ctx.moveTo(dripperCX - wTopW/2, Math.max(dripperTop+2, wTopY));
+            ctx.lineTo(dripperCX - bedTopW/2, bedTopY);
+            ctx.lineTo(dripperCX + bedTopW/2, bedTopY);
+            ctx.lineTo(dripperCX + wTopW/2, Math.max(dripperTop+2, wTopY));
+            ctx.closePath();
+            // Color water based on temp
+            var tempAlpha = 0.2 + (a.p.temp - 70) / 100 * 0.2;
+            ctx.fillStyle = 'rgba(74, 144, 217, ' + tempAlpha + ')';
+            ctx.fill();
+
+            // Water surface wave
+            ctx.strokeStyle = 'rgba(74, 144, 217, 0.4)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            var surfY = Math.max(dripperTop+2, wTopY);
+            for (var wx = -wTopW/2; wx <= wTopW/2; wx += 2) {
+                var wy = surfY + Math.sin((wx + a.t * 20) * 0.15) * 1.2;
+                if (wx === -wTopW/2) ctx.moveTo(dripperCX + wx, wy);
+                else ctx.lineTo(dripperCX + wx, wy);
+            }
+            ctx.stroke();
+        }
+    } else {
+        // Flat-bottom
+        var bx = dripperCX - topW/2, by = dripperTop;
+        ctx.strokeStyle = '#6F4E37'; ctx.lineWidth = 2.5;
+        ctx.strokeRect(bx, by, topW, dripperH);
+
+        var bedFrac2 = Math.min(0.55, a.s.bedDepth / 45);
+        var bedTopY2 = by + dripperH * (1 - bedFrac2);
+        ctx.fillStyle = '#8B6F4E';
+        ctx.fillRect(bx, bedTopY2, topW, by + dripperH - bedTopY2);
+
+        ctx.fillStyle = '#5C3D1E';
+        var ds2 = Math.max(1, Math.min(3.5, a.p.grind / 250));
+        for (var dd = 0; dd < 40; dd++) {
+            var px = bx + 4 + Math.random() * (topW - 8);
+            var py2 = bedTopY2 + 4 + Math.random() * (by + dripperH - bedTopY2 - 8);
+            ctx.beginPath(); ctx.arc(px, py2, ds2, 0, Math.PI*2); ctx.fill();
+        }
+
+        var wColMM2 = a.wCol * 1000;
+        var wFrac2 = Math.min(1 - bedFrac2 - 0.03, (wColMM2 / 60) * (1 - bedFrac2));
+        if (wFrac2 > 0.005) {
+            var wTopY2 = bedTopY2 - wFrac2 * dripperH;
+            var ta = 0.2 + (a.p.temp - 70) / 100 * 0.2;
+            ctx.fillStyle = 'rgba(74, 144, 217, ' + ta + ')';
+            ctx.fillRect(bx, Math.max(by+2, wTopY2), topW, bedTopY2 - Math.max(by+2, wTopY2));
+        }
+    }
+
+    // ---- DRIP DROPS falling ----
+    ctx.fillStyle = a.brewColor();
+    var dropStartY = dripperTop + dripperH + 5;
+    var dropEndY = cupTop + 5;
+    for (var di = a.drops.length - 1; di >= 0; di--) {
+        var dr = a.drops[di];
+        dr.y += dr.speed;
+        if (dr.y > dropEndY - dropStartY) {
+            a.drops.splice(di, 1);
+            continue;
+        }
+        ctx.beginPath();
+        ctx.ellipse(dripperCX + dr.x, dropStartY + dr.y, 2.5, 4, 0, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    // Continuous stream when drip rate is high
+    if (a.Q * 1e6 > 2) {
+        var streamAlpha = Math.min(0.6, a.Q * 1e6 * 0.05);
+        ctx.strokeStyle = a.brewColor().replace('rgb', 'rgba').replace(')', ',' + streamAlpha + ')');
+        ctx.lineWidth = Math.min(5, a.Q * 1e6 * 0.4);
+        ctx.beginPath();
+        ctx.moveTo(dripperCX, dropStartY);
+        ctx.lineTo(dripperCX, dropEndY);
+        ctx.stroke();
+    }
+
+    // ---- CUP ----
+    var cupLeft = dripperCX - cupW/2;
+    // Cup body
+    ctx.beginPath();
+    ctx.moveTo(cupLeft, cupTop);
+    ctx.lineTo(cupLeft + 10, cupTop + cupH);
+    ctx.lineTo(cupLeft + cupW - 10, cupTop + cupH);
+    ctx.lineTo(cupLeft + cupW, cupTop);
+    ctx.strokeStyle = '#AAA';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Handle
+    ctx.beginPath();
+    ctx.arc(cupLeft + cupW + 8, cupTop + cupH * 0.45, 15, -Math.PI * 0.4, Math.PI * 0.4);
+    ctx.strokeStyle = '#AAA';
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+
+    // Cup fill
+    var maxCupG = a.p.waterTotal * 0.95;
+    var fillFrac = Math.min(0.85, (a.dripped / maxCupG) * 0.85);
+    if (fillFrac > 0.01) {
+        var fillH = fillFrac * cupH;
+        var fillTop = cupTop + cupH - fillH;
+        var shrinkTop = 10 * (1 - fillFrac / 0.85);
+        ctx.beginPath();
+        ctx.moveTo(cupLeft + shrinkTop + 2, fillTop);
+        ctx.lineTo(cupLeft + 10, cupTop + cupH);
+        ctx.lineTo(cupLeft + cupW - 10, cupTop + cupH);
+        ctx.lineTo(cupLeft + cupW - shrinkTop - 2, fillTop);
+        ctx.closePath();
+        ctx.fillStyle = a.brewColor();
+        ctx.fill();
+
+        // Surface shimmer
+        ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        for (var sx2 = cupLeft + shrinkTop + 5; sx2 < cupLeft + cupW - shrinkTop - 5; sx2 += 2) {
+            var sy2 = fillTop + Math.sin((sx2 + a.t * 10) * 0.12) * 0.8;
+            if (sx2 === cupLeft + shrinkTop + 5) ctx.moveTo(sx2, sy2); else ctx.lineTo(sx2, sy2);
+        }
+        ctx.stroke();
+    }
+
+    // ---- STEAM from cup ----
+    if (a.dripped > 10 && a.p.temp > 80) {
+        ctx.globalAlpha = 0.3;
+        for (var si = a.steamParticles.length - 1; si >= 0; si--) {
+            var sp2 = a.steamParticles[si];
+            sp2.y -= sp2.speed;
+            sp2.x += Math.sin(sp2.y * 0.2) * 0.3;
+            sp2.life -= 0.008;
+            if (sp2.life <= 0) { a.steamParticles.splice(si, 1); continue; }
+            ctx.fillStyle = 'rgba(200,200,200,' + (sp2.life * 0.5) + ')';
+            ctx.beginPath();
+            var cupMid = dripperCX;
+            ctx.arc(cupMid + sp2.x, cupTop + sp2.y - 5, 3 + (1-sp2.life)*4, 0, Math.PI*2);
+            ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+    }
+
+    // ---- LABELS ----
+    ctx.fillStyle = '#6F4E37';
+    ctx.font = '11px Inter';
+    ctx.textAlign = 'center';
+
+    // Bed depth label
+    var bdX = isCone ? dripperCX + topW/2 + 5 : dripperCX + topW/2 + 10;
+    ctx.textAlign = 'left';
+    ctx.fillText('Bed: ' + a.s.bedDepth.toFixed(1) + ' mm', bdX, dripperTop + dripperH - 30);
+
+    // Water column label
+    if (a.wCol * 1000 > 0.5) {
+        ctx.fillText('Water: ' + (a.wCol * 1000).toFixed(1) + ' mm', bdX, dripperTop + 40);
+    }
+
+    // Grind size indicator
+    ctx.textAlign = 'center';
+    ctx.font = '10px Inter';
+    ctx.fillStyle = '#999';
+    var grindLabel = a.p.grind < 350 ? 'Very Fine' : a.p.grind < 500 ? 'Fine' : a.p.grind < 700 ? 'Medium' : a.p.grind < 900 ? 'Coarse' : 'Very Coarse';
+    ctx.fillText(grindLabel + ' grind (' + a.p.grind + '\u00B5m)', dripperCX, dripperTop + dripperH + 18);
+    ctx.fillText(a.p.temp + '\u00B0C', dripperCX, dripperTop - 8);
+
+    // Cup label
+    ctx.fillStyle = '#888';
+    ctx.font = '11px Inter';
+    ctx.fillText('Cup: ' + Math.round(a.dripped) + 'g', dripperCX, cupTop + cupH + 20);
+}
+
+// ======================== CHARTS ========================
+
+var dripChart, waterChart, extractionChart, bccChart;
+
+function initCharts() {
+    var gc = 'rgba(196,168,130,0.15)';
+    Chart.defaults.font.family = "'Inter', sans-serif";
+    Chart.defaults.color = '#6F4E37';
+
+    dripChart = new Chart(document.getElementById('dripChart'), {
+        type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#4A90D9',backgroundColor:'rgba(74,144,217,0.1)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}]},
+        options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Time (s)'},grid:{color:gc}},y:{title:{display:true,text:'Drip Rate (g/s)'},beginAtZero:true,grid:{color:gc}}},plugins:{legend:{display:false}}}
+    });
+    waterChart = new Chart(document.getElementById('waterChart'), {
+        type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#4A90D9',backgroundColor:'rgba(74,144,217,0.15)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}]},
+        options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Time (s)'},grid:{color:gc}},y:{title:{display:true,text:'Height (mm)'},beginAtZero:true,grid:{color:gc}}},plugins:{legend:{display:false}}}
+    });
+    extractionChart = new Chart(document.getElementById('extractionChart'), {
+        type:'line', data:{labels:[],datasets:[{data:[],borderColor:'#8B5E3C',backgroundColor:'rgba(139,94,60,0.1)',fill:true,tension:0.3,pointRadius:0,borderWidth:2}]},
+        options:{responsive:true,maintainAspectRatio:false,scales:{x:{title:{display:true,text:'Time (s)'},grid:{color:gc}},y:{title:{display:true,text:'EY (%)'},beginAtZero:true,suggestedMax:28,grid:{color:gc}}},plugins:{legend:{display:false}}}
+    });
+    bccChart = new Chart(document.getElementById('bccChart'), {
+        type:'scatter',
+        data:{datasets:[
+            {label:'Ideal',data:[{x:18,y:1.2},{x:22,y:1.2},{x:22,y:1.45},{x:18,y:1.45}],backgroundColor:'rgba(212,237,218,0.5)',borderColor:'#28a745',borderWidth:1,pointRadius:0,showLine:true,fill:true},
+            {label:'Brew',data:[{x:20,y:1.35}],backgroundColor:'#E85D3A',borderColor:'#C0392B',borderWidth:2,pointRadius:8}
+        ]},
+        options:{responsive:true,maintainAspectRatio:false,
+            scales:{x:{title:{display:true,text:'Extraction Yield (%)'},min:14,max:28,grid:{color:gc}},y:{title:{display:true,text:'TDS (%)'},min:0.8,max:1.8,grid:{color:gc}}},
+            plugins:{legend:{display:false},tooltip:{callbacks:{label:function(c){return c.datasetIndex===1?'EY: '+c.parsed.x.toFixed(1)+'%, TDS: '+c.parsed.y.toFixed(2)+'%':'';}}}}
+        }
+    });
+}
+
+// ======================== UPDATE ========================
+
+function update() {
+    var dose = document.getElementById('dose').value;
+    var grind = document.getElementById('grind').value;
+    var water = document.getElementById('water').value;
+    var temp = document.getElementById('temp').value;
+    var pourrate = document.getElementById('pourrate').value;
+    var pours = document.getElementById('pours').value;
+    var diameter = document.getElementById('diameter').value;
+
+    document.getElementById('dose-val').textContent = dose + ' g';
+    var gl = grind < 350 ? 'Very Fine' : grind < 500 ? 'Fine' : grind < 700 ? 'Medium' : grind < 900 ? 'Coarse' : 'Very Coarse';
+    document.getElementById('grind-val').textContent = gl + ' (' + grind + ' \u00B5m)';
+    document.getElementById('water-val').textContent = water + ' g';
+    document.getElementById('temp-val').textContent = temp + ' \u00B0C';
+    document.getElementById('pourrate-val').textContent = parseFloat(pourrate).toFixed(1) + ' ml/s';
+    document.getElementById('pours-val').textContent = pours;
+    document.getElementById('diameter-val').textContent = diameter + ' mm';
+
+    var r = simulateFull();
+
+    var min = Math.floor(r.brewTime / 60), sec = Math.floor(r.brewTime % 60);
+    document.getElementById('m-brewtime').textContent = min + ':' + (sec<10?'0':'') + sec;
+    document.getElementById('m-ey-num').textContent = r.EY.toFixed(1);
+    document.getElementById('m-tds-num').textContent = r.TDS.toFixed(2);
+    document.getElementById('m-bev-num').textContent = Math.round(r.bev);
+
+    var badge = document.getElementById('quality-badge');
+    if (r.EY >= 18 && r.EY <= 22 && r.TDS >= 1.2 && r.TDS <= 1.45) { badge.textContent='Ideal'; badge.className='quality-badge quality-ideal'; }
+    else if (r.EY < 18 && r.TDS < 1.2) { badge.textContent='Weak & Under-Extracted'; badge.className='quality-badge quality-under'; }
+    else if (r.EY < 18) { badge.textContent='Under-Extracted'; badge.className='quality-badge quality-under'; }
+    else if (r.EY > 22 && r.TDS > 1.45) { badge.textContent='Strong & Over-Extracted'; badge.className='quality-badge quality-over'; }
+    else if (r.EY > 22) { badge.textContent='Over-Extracted'; badge.className='quality-badge quality-over'; }
+    else if (r.TDS < 1.2) { badge.textContent='Weak'; badge.className='quality-badge quality-weak'; }
+    else if (r.TDS > 1.45) { badge.textContent='Strong'; badge.className='quality-badge quality-strong'; }
+    else { badge.textContent='Good'; badge.className='quality-badge quality-ideal'; }
+
+    var tl = r.tD.map(function(t){return Math.round(t);});
+    dripChart.data.labels=tl; dripChart.data.datasets[0].data=r.drD; dripChart.update('none');
+    waterChart.data.labels=tl; waterChart.data.datasets[0].data=r.whD; waterChart.update('none');
+    extractionChart.data.labels=tl; extractionChart.data.datasets[0].data=r.eyD; extractionChart.update('none');
+    bccChart.data.datasets[1].data=[{x:r.EY,y:r.TDS}]; bccChart.update('none');
+
+    // Reset animation with new params
+    if (!animRunning) {
+        animInit();
+        drawAnimFrame();
+    }
+}
+
+// ======================== PRESETS ========================
+
+function applyPreset(name) {
+    var presets = {
+        'v60classic':{dose:20,grind:600,water:320,temp:93,pourrate:5,pours:3,dripper:'cone',diameter:100},
+        'v60iced':{dose:25,grind:450,water:200,temp:96,pourrate:6,pours:2,dripper:'cone',diameter:100},
+        'coarse':{dose:20,grind:900,water:320,temp:93,pourrate:5,pours:3,dripper:'cone',diameter:100},
+        'fine':{dose:20,grind:350,water:320,temp:93,pourrate:5,pours:3,dripper:'cone',diameter:100},
+        'cold':{dose:20,grind:600,water:320,temp:80,pourrate:5,pours:3,dripper:'cone',diameter:100}
+    };
+    var p = presets[name]; if(!p)return;
+    document.getElementById('dose').value=p.dose;
+    document.getElementById('grind').value=p.grind;
+    document.getElementById('water').value=p.water;
+    document.getElementById('temp').value=p.temp;
+    document.getElementById('pourrate').value=p.pourrate;
+    document.getElementById('pours').value=p.pours;
+    document.getElementById('dripper').value=p.dripper;
+    document.getElementById('diameter').value=p.diameter;
+    update();
+}
+
+// ======================== INIT ========================
+
+window.addEventListener('DOMContentLoaded', function() {
+    initCharts();
+    animInit();
+    drawAnimFrame();
+    update();
+});
+</script>
+
+</body>
+</html>

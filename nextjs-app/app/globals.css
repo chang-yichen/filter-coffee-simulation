@@ -1,0 +1,34 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-bg: #FAF6F1;
+  --color-card: #FFFFFF;
+  --color-border: #E8DDD0;
+  --color-coffee-dark: #2C1810;
+  --color-coffee-medium: #6F4E37;
+  --color-coffee-light: #C4A882;
+  --color-coffee-cream: #F5E6D3;
+  --color-accent: #8B5E3C;
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-playfair);
+  --font-serif: Georgia, serif;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-coffee-dark);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  line-height: 1.6;
+}
+
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.font-serif {
+  font-family: Georgia, serif;
+}
+
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
