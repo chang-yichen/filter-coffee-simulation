@@ -153,8 +153,9 @@ export default function TechniqueSection() {
           </p>
           <p>
             <strong>Simulated effect:</strong> centre-only bloom wetting reduces effective
-            surface area during the bloom pour by ~50%, as half the grounds aren't yet
-            contributing to extraction. This lowers early extraction and final EY by
+            surface area during the bloom pour by ~50% (half the grounds aren't yet
+            contributing), then by ~25% during the second pour as CO₂ bursts from the
+            suddenly-wetted outer grounds disrupt flow paths. This lowers final EY by
             2–4 percentage points.
           </p>
         </InfoModal>

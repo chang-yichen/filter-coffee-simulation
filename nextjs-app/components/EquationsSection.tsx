@@ -491,6 +491,75 @@ export default function EquationsSection() {
           <li><strong>Pour timing</strong> — Wait for partial drawdown between pours to keep water column in the ideal range.</li>
         </ul>
       </EqCard>
+
+      <EqCard title="11. Bean Freshness — CO₂ and Volatile Loss"
+        tagline="Fresh beans fight extraction; stale beans have nothing left to give"
+        eqLabel="CO₂ degassing over time"
+        equation={<>[CO<sub>2</sub>](t) = [CO<sub>2</sub>]<sub>0</sub> &middot; e<sup>&minus;&lambda;t</sup></>}
+        analogy="A fresh loaf of bread releases steam that makes it hard to butter — the steam gets in the way. A week-old loaf has no steam, so butter spreads easily, but there's less flavour to absorb anyway. Coffee freshness works the same way."
+        infoTitle="Bean Freshness — The Full Picture from Gagné"
+        infoContent={
+          <>
+            <p>
+              During roasting, Maillard reactions and pyrolysis produce large volumes of CO₂
+              inside the bean's cell structure. A freshly roasted bean can hold several litres
+              of CO₂ per kilogram — much more than it can retain. This gas slowly escapes
+              through the porous cell walls over days and weeks.
+            </p>
+            <p>
+              <strong>Why CO₂ hurts extraction:</strong> CO₂ is hydrophobic. The gas forms
+              a thin barrier layer around each particle surface that actively repels water.
+              During the bloom, this manifests as visible bubbling — grounds can expand to
+              2–3× their dry volume as CO₂ escapes. Gagné notes that until this CO₂ has
+              been displaced, water cannot fully contact the particle surface, so
+              dissolution (Noyes-Whitney) is significantly slowed. This is why fresh beans
+              extract less during the bloom and early pours, often resulting in lower EY
+              unless compensated with finer grind, higher temperature, or longer bloom.
+            </p>
+            <p>
+              <strong>Why stale beans are also a problem:</strong> staling is not just CO₂
+              loss. The aromatic volatile compounds responsible for the floral, fruity, and
+              sweet notes in coffee are small, light molecules that escape alongside the CO₂.
+              Oxidation on the particle surface also converts sweet furfurals and esters into
+              flat, cardboard-like compounds. A stale bean extracts readily — no CO₂ barrier —
+              but the compounds that once made the coffee complex and vivid are simply gone.
+              The extraction yield number may look fine, but the cup tastes flat.
+            </p>
+            <p>
+              <strong>The resting sweet spot:</strong> Gagné recommends allowing CO₂ to
+              degas sufficiently before brewing, while still retaining volatile aromatics.
+              This typically means:
+            </p>
+            <ul>
+              <li><strong>Light roast:</strong> 2–6 weeks post-roast. Dense cell structure
+                traps CO₂ longer, so resting takes longer, but aromatics are also more
+                stable at lighter temperatures.</li>
+              <li><strong>Medium roast:</strong> 1–4 weeks. More porous structure degasses
+                faster; aromatics start declining noticeably after 4–6 weeks.</li>
+              <li><strong>Dark roast:</strong> 3–14 days. Heavily degraded cell walls release
+                CO₂ very fast; staling (aromatic loss + oxidation) also accelerates. Use
+                within 2 weeks of roast.</li>
+            </ul>
+            <p>
+              <strong>Practical implications:</strong> if your grinder's output "blooms"
+              dramatically and your brew tastes sharp, rest the beans longer. If your brew
+              tastes flat despite correct EY and TDS, your beans may be too old — not a
+              technique problem at all.
+            </p>
+          </>
+        }
+      >
+        <p>
+          CO₂ escapes exponentially after roasting — λ depends on roast level (dark roasts degas faster).
+          This creates two problems at opposite ends of freshness:
+        </p>
+        <ul>
+          <li><strong>Too fresh (1–7 days):</strong> high CO₂ forms a hydrophobic barrier on particle surfaces, repelling water and reducing effective surface area. EY drops; cup tastes sharp and uneven.</li>
+          <li><strong>Too stale ({'>'}4–6 wks):</strong> CO₂ is gone, but so are the volatile aromatic compounds. Extraction is easy, but there is nothing complex left to extract — cup tastes flat and cardboard-like.</li>
+          <li><strong>Rested (1–4 wks):</strong> enough CO₂ has escaped to allow full water contact; enough aromatics remain for a complex cup. This is the target window.</li>
+        </ul>
+        <p className="mt-1">The bloom pour's purpose is to <strong>force-degas</strong> residual CO₂ before main extraction. Longer bloom = more CO₂ removed = better water contact in subsequent pours.</p>
+      </EqCard>
     </section>
   );
 }

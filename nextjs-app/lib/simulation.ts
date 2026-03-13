@@ -103,12 +103,19 @@ function extractionIncrement(
   const drive = Math.max(0, 1 - frac);
   const contact = Math.min(1, (wCol * 1000 + s.bedDepth * 0.5) / s.bedDepth);
   const agitBoost = 1.0 + 0.3 * agitation;
-  // Bloom wetting: uneven saturation limits CO2 degassing → lower effective surface area
-  const bloomWettingFactor = curPour === 1 && (p.bloomWetting ?? 'even') === 'center' ? 0.50 : 1.0;
-  // Bean freshness: fresh beans have high CO2 that actively repels water during the bloom
-  const freshnessFactor = curPour === 1
-    ? ({ fresh: 0.75, rested: 1.0, stale: 0.90 }[p.beanFreshness ?? 'rested'])
-    : 1.0;
+  // Bloom wetting: uneven saturation limits CO2 degassing → lower effective surface area.
+  // Pour 1: center wetting leaves outer grounds dry → 50% surface area engaged.
+  // Pour 2: those outer grounds finally wet, but CO2 pockets burst and disrupt flow → 75%.
+  const bloomWetting = p.bloomWetting ?? 'even';
+  const bloomWettingFactor =
+    bloomWetting === 'center' && curPour === 1 ? 0.50 :
+    bloomWetting === 'center' && curPour === 2 ? 0.75 : 1.0;
+  // Bean freshness: fresh beans have high CO2 that actively repels water during the bloom.
+  // Stale beans have almost no CO2 — no barrier at all (factor = 1.0).
+  // Pour 2: residual CO2 in fresh bean's deeper cells still slightly impedes diffusion.
+  const freshnessFactor =
+    curPour === 1 ? ({ fresh: 0.75, rested: 1.0, stale: 1.0 }[p.beanFreshness ?? 'rested']) :
+    curPour === 2 ? ({ fresh: 0.88, rested: 1.0, stale: 1.0 }[p.beanFreshness ?? 'rested']) : 1.0;
   const bloomFactor = bloomWettingFactor * freshnessFactor;
   // Channeling: fraction of water bypasses bed → less water does extraction work
   const channelingFactor = 1 - s.channelingFrac;
