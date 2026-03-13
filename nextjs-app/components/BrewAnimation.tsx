@@ -411,13 +411,13 @@ export default function BrewAnimation() {
       <h2 className="font-display text-xl mb-1 text-coffee-dark">Live Brew Visualisation</h2>
       <p className="text-xs text-coffee-light mb-4">Physics-accurate animation — water flow, agitation, and extraction follow the real equations</p>
 
-      <div className="flex gap-6 items-start flex-wrap">
-        <div className="flex-shrink-0 text-center">
+      <div className="flex flex-col lg:flex-row gap-6 items-start">
+        <div className="w-full lg:w-auto lg:flex-shrink-0 text-center">
           <canvas ref={canvasRef} width={500} height={680}
-            className="rounded-xl" style={{ background: '#FDF9F5' }} />
+            className="rounded-xl max-w-full" style={{ background: '#FDF9F5', height: 'auto' }} />
         </div>
 
-        <div className="flex-1 min-w-[260px]">
+        <div className="flex-1 min-w-0">
           <div className="flex gap-2 flex-wrap mb-3">
             <button onClick={play} disabled={isRunning}
               className="px-4 py-2 text-sm border border-border rounded-lg bg-bg text-coffee-medium font-semibold

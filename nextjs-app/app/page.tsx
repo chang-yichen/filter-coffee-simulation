@@ -8,9 +8,9 @@ import EquationsSection from '@/components/EquationsSection';
 export default function Home() {
   return (
     <>
-      <header className="bg-gradient-to-br from-coffee-dark to-coffee-medium text-white py-10 px-6 text-center">
-        <h1 className="font-display text-4xl font-bold mb-2">The Physics of Filter Coffee</h1>
-        <p className="text-lg opacity-85 max-w-xl mx-auto font-light">
+      <header className="bg-gradient-to-br from-coffee-dark to-coffee-medium text-white py-6 md:py-10 px-6 text-center">
+        <h1 className="font-display text-2xl md:text-4xl font-bold mb-2">The Physics of Filter Coffee</h1>
+        <p className="text-base md:text-lg opacity-85 max-w-xl mx-auto font-light">
           An interactive simulation based on Jonathan Gagn&eacute;&apos;s book.
           Explore how grind size, temperature, and pouring affect your brew.
         </p>

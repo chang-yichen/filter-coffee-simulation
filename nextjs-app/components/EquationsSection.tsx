@@ -10,7 +10,7 @@ function EqCard({ title, tagline, eqLabel, equation, children, analogy, infoTitl
 }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="bg-card rounded-2xl p-6 border border-border shadow-sm mb-5">
+    <div className="bg-card rounded-2xl p-4 md:p-6 border border-border shadow-sm mb-5">
       <div className="flex items-start justify-between gap-2 mb-1">
         <h3 className="font-display text-xl text-coffee-dark">{title}</h3>
         <button
@@ -45,7 +45,7 @@ function EqCard({ title, tagline, eqLabel, equation, children, analogy, infoTitl
 export default function EquationsSection() {
   return (
     <section className="mt-4">
-      <h2 className="font-display text-2xl text-center mb-6">The Equations, Explained Simply</h2>
+      <h2 className="font-display text-xl md:text-2xl text-center mb-6">The Equations, Explained Simply</h2>
 
       <EqCard title="1. Darcy's Law — How Water Flows Through Coffee"
         tagline="The fundamental equation of percolation brewing"

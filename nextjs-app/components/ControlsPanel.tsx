@@ -66,7 +66,7 @@ export default function ControlsPanel() {
   const coneHTot = (params.diameter / 2) / Math.tan(V60_HALF_ANGLE);
 
   return (
-    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm sticky top-4 max-h-[calc(100vh-2rem)] overflow-y-auto">
+    <div className="bg-card rounded-2xl p-5 border border-border shadow-sm lg:sticky lg:top-4 lg:max-h-[calc(100vh-2rem)] lg:overflow-y-auto">
       <h2 className="font-display text-xl mb-3 text-coffee-medium">Brew Parameters</h2>
 
       {/* Presets */}
