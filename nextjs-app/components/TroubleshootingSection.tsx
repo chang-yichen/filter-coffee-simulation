@@ -55,10 +55,11 @@ const SCENARIOS: Scenario[] = [
       'Temperature too low — slower molecular diffusion, heavy compounds left behind',
       'Too few pours — concentration gradient not refreshed enough',
       'Fresh beans without sufficient bloom time — CO2 repels water in early pours',
+      'Light roast at too low a temperature — dense cell structure blocks diffusion below 93°C',
     ],
     fixes: [
       { param: 'Grind', change: 'Finer', why: 'More surface area, more contact time' },
-      { param: 'Temp', change: 'Higher (try 93–100°C)', why: 'Heavier sweetness compounds need heat to dissolve' },
+      { param: 'Temp', change: 'Higher — 93–100°C for light, 88–94°C for medium', why: 'Heavier compounds in light roasts need high thermal energy to diffuse out' },
       { param: 'Bloom', change: 'Even wetting + rested beans', why: 'Ensures full CO2 degassing before main pours' },
       { param: 'Pour schedule', change: 'More pours', why: 'Each pour resets the concentration gradient' },
     ],

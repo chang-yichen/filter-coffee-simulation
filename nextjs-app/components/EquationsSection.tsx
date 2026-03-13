@@ -204,6 +204,19 @@ export default function EquationsSection() {
               This is why Hoffmann's 30g recipe uses 100°C — for high-quality lightly roasted beans,
               full extraction temperature is needed to dissolve heavier sweetness compounds.
             </p>
+            <p>
+              <strong>Roast level changes the temperature requirement:</strong>
+            </p>
+            <ul>
+              <li><strong>Light roast (93–100°C):</strong> dense cell structure and high-mass aromatic
+                compounds mean low-temp diffusion is insufficient. At 85°C a light roast can lose
+                30–40% of its extraction efficiency versus 100°C.</li>
+              <li><strong>Medium roast (88–94°C):</strong> partially broken-down cell walls; a wide
+                range works, but cooler brews taste brighter and hotter brews taste fuller.</li>
+              <li><strong>Dark roast (83–90°C):</strong> heavily degraded cell structure makes
+                compounds accessible at lower temps. High temps over-extract the bitter melanoidins
+                and ash-like compounds that form during extended roasting.</li>
+            </ul>
           </>
         }
       >

@@ -151,6 +151,22 @@ export default function ControlsPanel() {
         );
       })()}
       <Slider label="Temperature" value={params.temp} unit="°C" min={70} max={100} step={0.5} paramKey="temp" />
+      {(() => {
+        const roast = params.roastLevel ?? 'medium';
+        const ranges: Record<string, [number, number, string]> = {
+          light:  [93, 100, 'Dense cell structure needs high heat to unlock heavier compounds'],
+          medium: [88,  94, 'Moderate cell porosity — a wide range works well'],
+          dark:   [83,  90, 'Porous structure; high temps over-extract bitter compounds'],
+        };
+        const [lo, hi, reason] = ranges[roast];
+        const ok = params.temp >= lo && params.temp <= hi;
+        return (
+          <div className={`mb-3 rounded-md px-2.5 py-1.5 border text-xs ${ok ? 'bg-green-50 border-green-200 text-green-800' : 'bg-amber-50 border-amber-200 text-amber-800'}`}>
+            <span className="font-semibold">{ok ? '✓' : '⚠'} {roast.charAt(0).toUpperCase() + roast.slice(1)} roast: {lo}–{hi}°C</span>
+            <span className="block text-[0.65rem] opacity-80 mt-0.5">{reason}</span>
+          </div>
+        );
+      })()}
 
       <SectionTitle>Pouring</SectionTitle>
       <Slider label="Pour Rate" value={params.pourRate} unit="ml/s" min={1} max={12} step={0.1} paramKey="pourRate"

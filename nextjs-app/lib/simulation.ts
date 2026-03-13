@@ -1,6 +1,7 @@
 import type { BrewParams, BrewConstants, AnimState, SimResult } from './types';
 import {
   kinematicViscosity, permeability, diffusionFactor, surfaceAreaFactor,
+  roastCellFactor,
   agitationFromPour, decayAgitation, agitationPermeabilityMultiplier,
   darcyFlowRate, bedDepthMM, coneBedTopDiameterMM, channelingFraction,
   V60_HALF_ANGLE, LRR, G,
@@ -111,7 +112,10 @@ function extractionIncrement(
   const bloomFactor = bloomWettingFactor * freshnessFactor;
   // Channeling: fraction of water bypasses bed → less water does extraction work
   const channelingFactor = 1 - s.channelingFrac;
-  const rate = 0.0026 * p.dose * sa * df * drive * contact * agitBoost * bloomFactor * channelingFactor;
+  // Roast cell factor: light roast cell walls resist diffusion at low temps;
+  // dark roast is more porous and accessible across the temperature range
+  const roastFactor = roastCellFactor(p.roastLevel ?? 'medium', p.temp);
+  const rate = 0.0026 * p.dose * sa * df * drive * contact * agitBoost * bloomFactor * channelingFactor * roastFactor;
   return Math.min(s.maxSoluble - extracted, rate * dt);
 }
 

@@ -48,6 +48,32 @@ export function surfaceAreaFactor(grindMicrons: number): number {
   return 600 / grindMicrons;
 }
 
+/**
+ * Roast-level cell accessibility factor — how much of the coffee's surface
+ * is actually reachable by water at a given temperature.
+ *
+ * Light roasts retain their dense cell structure. The heavier aromatic and
+ * sweetness compounds locked inside those cells have high molecular mass and
+ * low mobility (μ_p in Einstein-Smoluchowski), requiring higher thermal energy
+ * to diffuse out. Below ~90°C, extraction is significantly reduced.
+ *
+ * Dark roasts: roasting breaks down cellulosic cell walls, making compounds
+ * more accessible regardless of temperature. Slightly more efficient at lower
+ * temps but the max-soluble ceiling (30%) handles the overall yield difference.
+ *
+ * Medium roast: baseline = 1.0.
+ */
+export function roastCellFactor(
+  roastLevel: 'light' | 'medium' | 'dark',
+  temp: number,
+): number {
+  if (roastLevel === 'dark')   return 1.10;  // more porous cell structure
+  if (roastLevel === 'medium') return 1.00;
+  // Light: linear ramp 0.60 at 70°C → 1.00 at 100°C
+  const t = Math.max(70, Math.min(100, temp));
+  return 0.60 + (t - 70) * (0.40 / 30);
+}
+
 // ---- Agitation model ----
 
 /**
