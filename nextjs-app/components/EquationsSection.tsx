@@ -560,6 +560,182 @@ export default function EquationsSection() {
         </ul>
         <p className="mt-1">The bloom pour's purpose is to <strong>force-degas</strong> residual CO₂ before main extraction. Longer bloom = more CO₂ removed = better water contact in subsequent pours.</p>
       </EqCard>
+
+      <EqCard title="12. Chemical Extraction Selectivity — Why Sour Comes First"
+        tagline="Each flavor compound family has its own diffusion speed — and they extract in a fixed order"
+        eqLabel="Per-Compound Noyes-Whitney"
+        equation={<>dm<sub>i</sub>/dt &prop; &mu;<sub>p,i</sub> &middot; k<sub>B</sub>T &middot; (C<sub>sat,i</sub> &minus; C<sub>sol,i</sub>) / L</>}
+        analogy="Commuters leaving a building — the lightest sprint out first (acids), the middle group walks (sweet Maillard products), the heaviest shuffle last (melanoidins). Stop the brew early: only sprinters made it out. Wait too long: the slow, bitter crowd fills the cup."
+        infoTitle="Chemical Extraction Selectivity — The Physics Behind Sour, Sweet, and Bitter"
+        infoContent={
+          <>
+            <p>
+              This is the per-compound form of Noyes-Whitney, combined with Einstein-Smoluchowski.
+              Each compound family <em>i</em> has its own molecular mobility μ<sub>p,i</sub>, which
+              scales roughly as 1/MW<sup>1/3</sup>. Lighter molecules are more mobile — they diffuse
+              faster and extract sooner.
+            </p>
+            <p>
+              <strong>The three extraction zones by compound family:</strong>
+            </p>
+            <ul>
+              <li><strong>First — Simple organic acids</strong> (citric ~192 Da, malic ~134 Da):
+                high mobility, extract rapidly. These produce sharp acidity. When the brew stops
+                here ({'<'}18% EY), the cup tastes sour and hollow because no sweetness has
+                been extracted yet.</li>
+              <li><strong>Middle — Maillard products, sugars</strong> (~100–300 Da):
+                moderate mobility. These carry sweetness, caramel, and aromatic complexity.
+                The 18–22% EY window is defined by having captured this fraction while leaving
+                most of the bitter fraction behind.</li>
+              <li><strong>Last — Melanoidins, high-MW chlorogenic acids</strong> (~1,000–10,000 Da):
+                very low mobility (5–10× slower than acids). These contribute bitterness and
+                astringency. Above 22% EY, their contribution dominates the cup.</li>
+            </ul>
+            <p>
+              <strong>Temperature's selective effect:</strong> raising temperature increases D
+              for all compounds, but the relative gain is largest for heavy molecules — because
+              thermal energy overcomes their inertia proportionally more. This is why brewing
+              hotter at the same EY can taste rounder: you extract more melanoidin sweetness
+              and body alongside the melanoidin bitterness, whereas colder brewing tilts
+              toward acids and light Maillard products.
+            </p>
+            <p>
+              This card provides the causal physics behind Cards 3–5. Cards 3 (Noyes-Whitney)
+              and 4 (Einstein-Smoluchowski) describe the overall mechanism; Card 12 shows
+              that the subscript <em>i</em> per compound is what creates the flavor extraction
+              sequence and explains why the 18–22% EY target exists.
+            </p>
+          </>
+        }
+      >
+        <p>
+          The subscript <em>i</em> is the key insight: <strong>each compound family obeys the
+          same physics but with a different mobility μ<sub>p,i</sub></strong>. This creates a
+          fixed extraction sequence set by molecular weight, not by recipe choice.
+        </p>
+        <ul>
+          <li><strong>μ<sub>p,i</sub> (mobility)</strong> — Scales as ~1/MW<sup>1/3</sup>. Acids (MW ~130–200) are 5–10× more mobile than melanoidins (MW ~1,000–10,000).</li>
+          <li><strong>Fixed extraction order</strong> — Organic acids → sugars and Maillard products → melanoidins. Physics, not preference.</li>
+          <li><strong>Why 18–22% EY exists</strong> — At 18% EY you have captured acids and sweets but left most melanoidins behind. Above 22% the bitter fraction dominates.</li>
+          <li><strong>Temperature shifts the window</strong> — Higher temp raises D most for heavy molecules, selectively increasing melanoidin extraction. This can make a coffee taste rounder at the same EY.</li>
+        </ul>
+      </EqCard>
+
+      <EqCard title="13. Agitation Physics — How Pouring Changes Flow and Extraction"
+        tagline="A pour does two separate things simultaneously: opens pores and steepens the dissolution gradient"
+        eqLabel="Agitation effects on k and L"
+        equation={<>k<sub>eff</sub> = k &middot; (1 + &alpha;&middot;E<sub>ag</sub>) &nbsp;&nbsp;&nbsp; L<sub>eff</sub> = L / (1 + &beta;&middot;E<sub>ag</sub>)</>}
+        analogy="Stirring hot chocolate — simultaneously moves powder away from the surface it was sitting on (reduces L) AND circulates fresh hot liquid past each particle (refreshes C_sol). A gentle, sustained stir dissolves faster than waiting. A violent splash makes a mess without dissolving evenly."
+        infoTitle="Agitation Physics — Two Simultaneous Mechanisms"
+        infoContent={
+          <>
+            <p>
+              The simulation models agitation energy E<sub>ag</sub> generated by water impact,
+              decaying with a half-life of ~0.25 s. A sustained pour is required to maintain
+              the effect — a single splash dissipates almost immediately.
+            </p>
+            <p>
+              <strong>Effect 1 — Permeability (Darcy's Law):</strong> turbulence re-suspends the
+              fine-particle cake that accumulates on top of the coffee bed, temporarily reopening
+              pore channels. The simulation implements this as k<sub>eff</sub> = k × (1 + α·E<sub>ag</sub>)
+              with <strong>α = 0.5</strong> — meaning full agitation can raise effective permeability
+              by up to 50%. This is why the drip rate spikes at the start of each new pour and
+              then declines as turbulence decays.
+            </p>
+            <p>
+              <strong>Effect 2 — Dissolution (Noyes-Whitney):</strong> turbulence sweeps the
+              concentration boundary layer away from particle surfaces, thinning L<sub>eff</sub>.
+              This keeps the gradient (C<sub>sat</sub> − C<sub>sol</sub>) steep, accelerating
+              extraction. The simulation uses an agitation boost of <strong>β = 0.3</strong>,
+              meaning full agitation raises the dissolution rate by up to 30%.
+            </p>
+            <p>
+              <strong>Trade-off — channeling:</strong> at high agitation energy, water can blast
+              through a single fast path rather than flowing uniformly through the bed. Uniform,
+              moderate pours — a gentle circle or center pour — sustain turbulence without
+              creating preferential channels. This connects to the channeling fraction modeled
+              in the simulation's flow physics.
+            </p>
+            <p>
+              <strong>Turbo recipes</strong> exploit these effects deliberately: a high, continuous
+              pour over the full brew maintains E<sub>ag</sub> near maximum throughout, producing
+              a fast, relatively high-EY brew without needing fine grind or high temperature.
+              The physics here — both α and β terms — explains why this works.
+            </p>
+          </>
+        }
+      >
+        <p>
+          Every pour creates turbulence that acts through <strong>two independent mechanisms</strong>
+          simultaneously — one in Darcy&apos;s Law, one in Noyes-Whitney.
+        </p>
+        <ul>
+          <li><strong>E<sub>ag</sub> (agitation energy)</strong> — Generated by water impact; decays with ~0.25 s half-life. A sustained pour is required to keep it elevated.</li>
+          <li><strong>Effect 1 — Flow (k<sub>eff</sub>)</strong> — Turbulence re-suspends fines clogging pore spaces, raising permeability by up to 50% (α = 0.5). Explains drip rate spikes at each new pour.</li>
+          <li><strong>Effect 2 — Dissolution (L<sub>eff</sub>)</strong> — Turbulence sweeps saturated water from particle surfaces, keeping the concentration gradient steep. Extraction rate rises by up to 30% (β = 0.3).</li>
+          <li><strong>Trade-off</strong> — Too vigorous a pour causes channeling: water finds a single fast path rather than flowing through the whole bed evenly.</li>
+        </ul>
+      </EqCard>
+
+      <EqCard title="14. Filter Paper Resistance — The Second Darcy Layer"
+        tagline="The paper and the bed are resistances in series — both limit flow"
+        eqLabel="Darcy in series"
+        equation={<>Q = &Delta;P / (R<sub>bed</sub> + R<sub>paper</sub>) &nbsp;&nbsp; R = &mu; &middot; L / (k &middot; A)</>}
+        analogy="A garden hose with a pinched end — making the hose wider (coarser grind, lower R_bed) helps only so much if the pinch (R_paper) remains. Different papers are different-sized pinches. Pre-wetting removes the initial extra-tight pinch caused by air-filled pores."
+        infoTitle="Filter Paper Resistance — Gagné's Series Darcy Model"
+        infoContent={
+          <>
+            <p>
+              Gagné models the filter paper as a second porous layer in series with the coffee bed.
+              Total resistance is R<sub>bed</sub> + R<sub>paper</sub>, where each R = μ·L/(k·A).
+              A lower k<sub>paper</sub> increases R<sub>paper</sub> and slows the entire brew,
+              regardless of grind size.
+            </p>
+            <p>
+              <strong>k<sub>paper</sub> values for common papers:</strong>
+            </p>
+            <ul>
+              <li><strong>Hario V60 white (bleached):</strong> ~3–5 × 10⁻¹⁵ m² — relatively permeable, contributes ~10–20% of total flow resistance.</li>
+              <li><strong>Chemex bonded:</strong> ~0.5–1 × 10⁻¹⁵ m² — noticeably lower permeability; brews significantly slower and filters out more fine particles, producing a cleaner, lighter-bodied cup.</li>
+              <li><strong>Melitta and flat-bottom papers:</strong> intermediate values, closer to Hario.</li>
+              <li>Paper adds roughly <strong>10–50% of total flow resistance</strong> depending on paper type and grind size — a coarser grind makes R<sub>bed</sub> smaller, so R<sub>paper</sub> becomes proportionally more significant.</li>
+            </ul>
+            <p>
+              <strong>Dry vs. wet paper:</strong> dry paper has air-filled pores. Water must overcome
+              capillary resistance to displace this air, making initial resistance 3–5× higher than
+              the stable wet value. Pre-rinsing fills the pores with water and stabilises R<sub>paper</sub>
+              from the first drop of brew water.
+            </p>
+            <p>
+              <strong>Air-gap bypass:</strong> a dry paper can pull slightly away from the cone wall
+              as it flexes under the weight of dry grounds. Water then runs along the gap between
+              paper and cone — bypassing the coffee bed entirely and reaching the cup under-extracted.
+              Pre-wetting + pressing the paper firmly against the cone wall eliminates this failure mode.
+            </p>
+            <p>
+              <strong>Paper taste:</strong> paper-fiber compounds flush out in the first ~50 g of hot
+              water. Pre-rinsing removes these before any brew water contacts the coffee, preventing
+              a papery off-taste in the cup. Natural (unbleached) papers tend to have a stronger
+              fiber taste than bleached papers.
+            </p>
+            <p>
+              <strong>Metal vs. cloth vs. paper:</strong> metal filters (Able Kone, Hario Metal)
+              have very high k — almost no paper resistance — but allow oils and fine particles into
+              the cup, producing a heavier body. Cloth filters (flannel drip) are intermediate and
+              develop a seasoned oil layer over time. Paper is the cleanest but adds resistance and
+              removes oils.
+            </p>
+          </>
+        }
+      >
+        <ul>
+          <li><strong>R<sub>bed</sub></strong> — Dominated by grind size (Kozeny-Carman). Coarser grind = lower R<sub>bed</sub>.</li>
+          <li><strong>R<sub>paper</sub></strong> — Depends on paper type. Chemex bonded paper has ~3–5× higher resistance than Hario V60 white, explaining the slower brew and cleaner cup.</li>
+          <li><strong>Dry paper</strong> — Air-filled pores raise initial resistance 3–5×. Pre-rinsing stabilises flow from the first pour.</li>
+          <li><strong>Air-gap bypass</strong> — A dry paper lifts off the cone; water bypasses the bed entirely. Pre-wetting + pressing the paper against the cone prevents this.</li>
+          <li><strong>Paper taste</strong> — Fiber compounds flush in the first ~50 g of hot water. Pre-rinsing before brewing eliminates this.</li>
+        </ul>
+      </EqCard>
     </section>
   );
 }
